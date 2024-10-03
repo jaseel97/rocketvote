@@ -1,5 +1,18 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    response = [
+        {
+            "description" : "story sizing",
+            "type" : "fibonacci",
+            "options" : ["1","2","3","5","8","13+"]
+        },
+        {
+            "description" : "story sizing",
+            "type" : "tshirt",
+            "options" : ["S","M","L","XL","XXL"]
+        }
+    ]
+
+    return HttpResponse(JsonResponse(response, safe=False))
