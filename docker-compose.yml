@@ -5,6 +5,8 @@ services:
       - "6379:6379"
     env_file:
       - ./dev.env
+    networks:
+      - rocketvote-network
 
   api:
     build:
@@ -16,5 +18,19 @@ services:
       - "8080:8080"
     depends_on:
       - redis
+    networks:
+      - rocketvote-network
 
-  # ui:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - rocketvote-network
+  
+networks:
+  rocketvote-network:
+    driver: bridge
