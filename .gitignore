@@ -2,3 +2,4 @@ dev.env
 __pycache__
 db.sqlite3
 node_modules
+backend/rocketVoteAPI/__pycache__/settings.cpython-310.pyc
