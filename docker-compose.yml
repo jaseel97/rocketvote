@@ -15,7 +15,9 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "8080:8080"
+      - "${API_PORT}:${API_PORT}"
+    env_file:
+      - ./dev.env
     depends_on:
       - redis
     networks:
@@ -30,7 +32,7 @@ services:
       - api
     networks:
       - rocketvote-network
-  
+
 networks:
   rocketvote-network:
     driver: bridge
