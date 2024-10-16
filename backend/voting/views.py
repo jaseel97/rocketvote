@@ -103,7 +103,7 @@ def create(request):
         return JsonResponse(
             {
                 'poll_id' : new_poll_id,
-                'redirect_url': f'/v1/create/{creation_id}'
+                'redirect_url': f'/create/{creation_id}'
             }, 
             status=302
         )
