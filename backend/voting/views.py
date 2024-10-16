@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from nanoid import generate
 
+from .utils import get_poll
 from .models import PollTemplate
 from .redis_pool import get_redis_connection
 
@@ -110,3 +111,53 @@ def create(request):
 
     except Exception as e:
         return HttpResponseServerError(f"An unexpected error occurred: {str(e)}")
+
+@csrf_exempt
+def cast_vote(request, poll_id):
+    if request.method != 'PATCH':
+        return HttpResponseBadRequest('Invalid request method')
+    
+    poll = get_poll(poll_id)
+    if poll is None or poll['revealed'] == '1':
+        return HttpResponseBadRequest('Poll Expired/Ended')
+    
+    try:
+        ballot = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest('Invalid JSON payload')
+    
+    if not all(field in poll['options'] for field in ballot['votes']):
+        return HttpResponseBadRequest('Invalid option')
+
+    if len(ballot['votes']) != len(set(ballot['votes'])):
+        return HttpResponseBadRequest('Duplicate votes are not allowed')
+
+    try:
+        ballot['voter']
+    except:
+        return HttpResponseBadRequest('Missing username')
+    
+    poll_votes_key = f'{poll_id}:votes'
+    poll_count_key = f'{poll_id}:count'
+
+    voter_name = ballot['voter']
+    new_votes = '-:-'.join(ballot['votes'])
+
+    try:
+        redis_conn = get_redis_connection()
+
+        prev_votes = redis_conn.hget(poll_votes_key, voter_name)
+        if prev_votes:
+            prev_votes = prev_votes.decode('utf-8').split('-:-')
+            for option in prev_votes:
+                redis_conn.zincrby(poll_count_key, -1, option)
+
+        redis_conn.hset(poll_votes_key, voter_name, new_votes)
+
+        for option in ballot['votes']:
+            redis_conn.zincrby(poll_count_key, 1, option)
+    except Exception as e:
+        return HttpResponseServerError(f"Failed to save poll data: {str(e)}")
+    
+    return HttpResponse('Vote/s cast successfully', 200)
+
