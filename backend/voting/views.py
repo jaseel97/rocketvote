@@ -1,7 +1,13 @@
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
+
 import json
+from nanoid import generate
+
 from .models import PollTemplate
+from .redis_pool import get_redis_connection
+
+required_fields = ['type', 'options', 'revealed', 'multi_selection']
 
 @csrf_exempt
 def templates(request):
@@ -19,7 +25,6 @@ def templates(request):
         try:
             input_template = json.loads(request.body)
 
-            required_fields = ['type', 'options', 'revealed', 'multi_selection']
             if not all(field in input_template for field in required_fields):
                 return JsonResponse({'error': 'Missing required fields'}, status=400)
             
@@ -59,3 +64,49 @@ def templates(request):
 
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+
+# takes the poll meta data from the UI and creates a new poll
+@csrf_exempt
+def create(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponseBadRequest('Invalid request method')
+
+        try:
+            poll_body = json.loads(request.body)
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest('Invalid JSON payload')
+
+        if not all(field in poll_body for field in required_fields):
+            return HttpResponseBadRequest('Missing required fields')
+
+        if not isinstance(poll_body['options'], list) or len(poll_body['options']) == 0:
+            return HttpResponseBadRequest('Options must be a non-empty list')
+
+        creation_id = generate()
+        new_poll_id = generate(size=7) # for shareable url
+
+        poll_metadata_key = f'{new_poll_id}:metadata'
+        options = "-:-".join(poll_body['options'])
+        poll_metadata = f"{poll_body['type']}-;-{poll_body['revealed']}-;-{poll_body['multi_selection']}-;-{options}"
+
+        try:
+            redis_conn = get_redis_connection()
+            redis_conn.set(poll_metadata_key, poll_metadata)
+            creation_to_poll_key = f'{creation_id}:poll_id'
+            redis_conn.set(creation_to_poll_key, new_poll_id)
+        except Exception as e:
+            return HttpResponseServerError(f"Failed to save poll data: {str(e)}")
+
+        return JsonResponse(
+            {
+                'poll_id' : new_poll_id,
+                'redirect_url': f'/v1/create/{creation_id}'
+            }, 
+            status=302
+        )
+
+    except Exception as e:
+        return HttpResponseServerError(f"An unexpected error occurred: {str(e)}")
