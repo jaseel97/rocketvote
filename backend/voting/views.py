@@ -100,7 +100,13 @@ def create(request):
         except Exception as e:
             return HttpResponseServerError(f"Failed to save poll data: {str(e)}")
 
-        return JsonResponse({'redirect_url': f'/v1/create/{creation_id}'}, status=302)
+        return JsonResponse(
+            {
+                'poll_id' : new_poll_id,
+                'redirect_url': f'/v1/create/{creation_id}'
+            }, 
+            status=302
+        )
 
     except Exception as e:
         return HttpResponseServerError(f"An unexpected error occurred: {str(e)}")
