@@ -1,5 +1,4 @@
 from django.urls import include, path
-import django_eventstream
 
 from . import views
 
