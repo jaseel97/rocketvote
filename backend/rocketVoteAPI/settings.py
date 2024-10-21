@@ -69,6 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'rocketVoteAPI.wsgi.application'
+ASGI_APPLICATION = 'rocketVoteAPI.asgi.application'
 
 
 # Database
