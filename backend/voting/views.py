@@ -79,19 +79,22 @@ def create(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
 
-    required_fields = ['type', 'revealed', 'multi_selection', 'options']
+    required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
     if not all(field in poll_body for field in required_fields):
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
     if not isinstance(poll_body['options'], list) or len(poll_body['options']) == 0:
         return JsonResponse({'error': 'Options must be a non-empty list'}, status=400)
+    
+    if len(poll_body['options']) != len(set(poll_body['options'])):
+        return JsonResponse({'error': 'Duplicate options are not allowed'}, status=400)
 
     creation_id = generate()
-    new_poll_id = generate(size=7)  # for shareable URL
+    new_poll_id = generate(size=8)  # for shareable URL
 
     poll_metadata_key = f'{new_poll_id}:metadata'
     options = "-:-".join(poll_body['options'])
-    poll_metadata = f"{poll_body['type']}-;-{poll_body['revealed']}-;-{poll_body['multi_selection']}-;-{options}"
+    poll_metadata = f"{poll_body['description']}-;-{poll_body['type']}-;-{poll_body['revealed']}-;-{poll_body['multi_selection']}-;-{options}"
 
     try:
         redis_conn = get_redis_connection()
