@@ -1,36 +1,47 @@
 import { useState } from "react";
-import useFetch from "./useFetch";
+import { useNavigate } from "react-router-dom";
 
 const CreatePoll = () => {
     const [description, setDescription] = useState("");
     const [options, setOptions] = useState([""]);
     const [activeTemplate, setActiveTemplate] = useState("");
-
+    const navigate = useNavigate(); 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const pollDetails = {
             description: description,
-            type: activeTemplate || "custom", 
+            type: activeTemplate || "custom",
             options: options,
             revealed: 0,
             multi_selection: 0,
         };
-    
         fetch("http://localhost:8080/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(pollDetails), 
+            body: JSON.stringify(pollDetails),
         })
-        .then(() => {
-            console.log("API Connected");
-            console.log(pollDetails); 
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error('Failed to create poll');
+            }
+            return res.json();
+        })
+        .then((responseData) => {
+            console.log("Poll Created:", responseData);
+            if (responseData.poll_id) {
+                const voteUrl = `http://127.0.0.1:5173/${responseData.poll_id}`;
+                window.open(voteUrl, '_blank');
+            }
+            if (responseData.redirect_url) {
+                navigate(responseData.redirect_url, { state: { redirect_url: responseData.redirect_url } });
+            }
         })
         .catch((err) => {
             console.error("Error:", err);
         });
     };
-    
+
 
     const handleReset = () => {
         setDescription("");
