@@ -114,53 +114,70 @@ def create(request):
 
 @csrf_exempt
 def cast_vote(request, poll_id):
-    if request.method != 'PATCH':
+    if request.method not in ['PATCH', 'GET']:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
     redis_conn = get_redis_connection()
 
-    try:
+    if request.method == 'GET':
         poll = get_poll(redis_conn, poll_id)
-        if poll is None or poll['revealed'] == '1':
+        if poll is None:
             return JsonResponse({'error': 'Poll Expired/Ended'}, status=400)
-    except:
-        return JsonResponse({'error':'An unexpected error has occured'}, status=500)
-    
-    try:
-        ballot = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-    
-    if not all(field in poll['options'] for field in ballot['votes']):
-        return JsonResponse({'error': 'Invalid option'}, status=400)
+        if poll['revealed'] == '1':
+            poll_results = get_poll_results(redis_conn, poll_id)
+            response = {
+                'metadata': poll,
+                'counts' : poll_results[1]
+            }
+            return JsonResponse(response, status=200)
+        else:
+            response = {
+                'metadata': poll,
+            }
+            return JsonResponse(response, status=200)
+    elif request.method == 'PATCH':
+        try:
+            poll = get_poll(redis_conn, poll_id)
+            if poll is None or poll['revealed'] == '1':
+                return JsonResponse({'error': 'Poll Expired/Ended'}, status=400)
+        except:
+            return JsonResponse({'error':'An unexpected error has occured'}, status=500)
 
-    if len(ballot['votes']) != len(set(ballot['votes'])):
-        return JsonResponse({'error': 'Duplicate votes are not allowed'}, status=400)
+        try:
+            ballot = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
 
-    if 'voter' not in ballot:
-        return JsonResponse({'error': 'Missing username'}, status=400)
-    
-    poll_votes_key = f'{poll_id}:votes'
-    poll_count_key = f'{poll_id}:count'
+        if not all(field in poll['options'] for field in ballot['votes']):
+            return JsonResponse({'error': 'Invalid option'}, status=400)
 
-    voter_name = ballot['voter']
-    new_votes = '-:-'.join(ballot['votes'])
+        if len(ballot['votes']) != len(set(ballot['votes'])):
+            return JsonResponse({'error': 'Duplicate votes are not allowed'}, status=400)
 
-    try:
-        prev_votes = redis_conn.hget(poll_votes_key, voter_name)
-        if prev_votes:
-            prev_votes = prev_votes.decode('utf-8').split('-:-')
-            for option in prev_votes:
-                redis_conn.zincrby(poll_count_key, -1, option)
+        if 'voter' not in ballot:
+            return JsonResponse({'error': 'Missing username'}, status=400)
 
-        redis_conn.hset(poll_votes_key, voter_name, new_votes)
+        poll_votes_key = f'{poll_id}:votes'
+        poll_count_key = f'{poll_id}:count'
 
-        for option in ballot['votes']:
-            redis_conn.zincrby(poll_count_key, 1, option)
-    except Exception as e:
-        return JsonResponse({'error': f'Failed to save poll data: {str(e)}'}, status=500)
-    
-    return JsonResponse({'message': 'Vote/s cast successfully'}, status=200)
+        voter_name = ballot['voter']
+        new_votes = '-:-'.join(ballot['votes'])
+
+        try:
+            prev_votes = redis_conn.hget(poll_votes_key, voter_name)
+            if prev_votes:
+                prev_votes = prev_votes.decode('utf-8').split('-:-')
+                for option in prev_votes:
+                    redis_conn.zincrby(poll_count_key, -1, option)
+
+            redis_conn.hset(poll_votes_key, voter_name, new_votes)
+
+            for option in ballot['votes']:
+                redis_conn.zincrby(poll_count_key, 1, option)
+        except Exception as e:
+            return JsonResponse({'error': f'Failed to save poll data: {str(e)}'}, status=500)
+
+        return JsonResponse({'message': 'Vote/s cast successfully'}, status=200)
 
 @csrf_exempt
 def poll_admin(request, creation_id):
