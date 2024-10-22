@@ -71,6 +71,7 @@ def templates(request):
 # takes the poll meta data from the UI and creates a new poll
 @csrf_exempt
 def create(request):
+    print("---->", request.method)
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
