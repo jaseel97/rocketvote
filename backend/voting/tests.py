@@ -10,17 +10,47 @@ class VotingViewsTest(TestCase):
         # Create a test client
         self.client = Client()
 
-        # Create a test PollTemplate
-        self.poll_template = PollTemplate.objects.create(
+        # Create test PollTemplates: fibonacci, tshirt, and confidence
+        self.poll_template_fibonacci = PollTemplate.objects.create(
             title="fibonacci",
-            template='{"type": "fibonacci", "options": ["1", "2", "3", "5", "8", "13"], "revealed": 0, "multi_selection": 0}'
+            template=json.dumps({
+                "type": "fibonacci",
+                "options": ["1", "2", "3", "5", "8", "13"],
+                "revealed": 0,
+                "multi_selection": 0
+            })
+        )
+
+        self.poll_template_tshirt = PollTemplate.objects.create(
+            title="tshirt",
+            template=json.dumps({
+                "type": "tshirt",
+                "options": ["S", "M", "L", "XL", "XXL"],
+                "revealed": 0,
+                "multi_selection": 0
+            })
+        )
+
+        self.poll_template_confidence = PollTemplate.objects.create(
+            title="confidence",
+            template=json.dumps({
+                "type": "confidence",
+                "options": ["Up", "Down"],
+                "revealed": 0,
+                "multi_selection": 0
+            })
         )
 
     def test_get_templates(self):
         """Test the GET method for the /templates endpoint"""
         response = self.client.get(reverse('index'))  # 'index' is the correct name for the templates URL
         self.assertEqual(response.status_code, 200)
-        self.assertIn("fibonacci", response.json())
+        response_data = response.json()
+        
+        # Check all three templates
+        self.assertIn("fibonacci", response_data)
+        self.assertIn("tshirt", response_data)
+        self.assertIn("confidence", response_data)
 
     def test_post_templates_valid(self):
         """Test the POST method for creating a valid template"""
