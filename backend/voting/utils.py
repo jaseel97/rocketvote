@@ -1,19 +1,47 @@
 from .redis_pool import get_redis_connection
 
+# def get_poll(redis_conn, poll_id):
+#         poll_string = redis_conn.get(f'{poll_id}:metadata')
+
+#         if poll_string is None:
+#             return None
+
+#         poll = parse_poll_metadata_string(poll_string.decode('utf-8'))
+#         return poll
+
 def get_poll(redis_conn, poll_id):
-        poll_string = redis_conn.get(f'{poll_id}:metadata')
+    poll_string = redis_conn.get(f'{poll_id}:metadata')
 
-        if poll_string is None:
-            return None
+    if poll_string is None:
+        return None
 
-        poll = parse_poll_metadata_string(poll_string.decode('utf-8'))
-        return poll
+    # Decode only if poll_string is in bytes
+    if isinstance(poll_string, bytes):
+        poll_string = poll_string.decode('utf-8')
+
+    poll = parse_poll_metadata_string(poll_string)
+    return poll
+
+
+# def get_poll_from_creation_id(redis_conn, creation_id):
+#     poll_id = redis_conn.get(f'{creation_id}:poll_id')
+#     if poll_id is None:
+#         return None
+#     return poll_id.decode('utf-8'), get_poll(redis_conn, poll_id.decode('utf-8'))
+
 
 def get_poll_from_creation_id(redis_conn, creation_id):
     poll_id = redis_conn.get(f'{creation_id}:poll_id')
+
     if poll_id is None:
         return None
-    return poll_id.decode('utf-8'), get_poll(redis_conn, poll_id.decode('utf-8'))
+
+    # Decode poll_id if it's in bytes
+    if isinstance(poll_id, bytes):
+        poll_id = poll_id.decode('utf-8')
+
+    return poll_id, get_poll(redis_conn, poll_id)
+
 
 def parse_poll_metadata_string(poll_string):
     if not poll_string or not isinstance(poll_string, str):
