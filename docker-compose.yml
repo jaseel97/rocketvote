@@ -23,15 +23,15 @@ services:
     networks:
       - rocketvote-network
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - api
-  #   networks:
-  #     - rocketvote-network
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - rocketvote-network
 
 networks:
   rocketvote-network:
