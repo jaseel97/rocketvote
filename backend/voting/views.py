@@ -142,12 +142,15 @@ def cast_vote(request, poll_id):
             if poll is None or poll['revealed'] == '1':
                 return JsonResponse({'error': 'Poll Expired/Ended'}, status=400)
         except:
-            return JsonResponse({'error':'An unexpected error has occured'}, status=500)
+            return JsonResponse({'error':'An unexpected error has occurred'}, status=500)
 
         try:
             ballot = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+        
+        if poll['multi_selection'] == '0' and len(ballot['votes'])>1:
+            return JsonResponse({'error': 'Only one option can be chosen for this poll'}, status=400)
 
         if not all(field in poll['options'] for field in ballot['votes']):
             return JsonResponse({'error': 'Invalid option'}, status=400)
