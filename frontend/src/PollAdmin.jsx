@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { Pie } from 'react-chartjs-2';
 import { Chart, ArcElement, Tooltip } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+
 Chart.register(ArcElement, Tooltip, ChartDataLabels);
+
 const generateColors = (numColors) => {
     const colors = [];
     const step = 360 / numColors;
@@ -84,10 +86,10 @@ const PollAdmin = () => {
         });
     };
 
-    if (isPending) return <p>Loading poll data...</p>;
-    if (error) return <p>Error: {error}</p>;
+    if (isPending) return <p style={{ color: 'black' }}>Loading poll data...</p>;
+    if (error) return <p style={{ color: 'black' }}>Error: {error}</p>;
 
-    if (!pollData || !pollData.metadata) return <p>No poll data available.</p>;
+    if (!pollData || !pollData.metadata) return <p style={{ color: 'black' }}>No poll data available.</p>;
 
     const { description, options } = pollData.metadata;
     const counts = pollData.counts || {};
@@ -134,21 +136,22 @@ const PollAdmin = () => {
     };
 
     return (
-        <div className="max-w-7xl w-full m-auto bg-gray-100 p-8">
-            <div className="poll-container bg-white p-8 rounded shadow-md">
-                <h2 className="text-2xl font-bold mb-4">Poll Results</h2>
+        <div className="max-w-7xl w-full m-auto bg-gray-800 p-8">
+            {/* Inner Div with White Background */}
+            <div className="poll-container bg-white text-black p-8 rounded-lg shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105">
+                <h2 className="text-2xl font-bold mb-4" style={{ color: '#910d22' }}>Poll Results</h2>
                 
                 <div className="mb-6">
-                    <label className="block text-lg font-semibold mb-2">Poll ID URL</label>
+                    <label className="block text-lg font-semibold mb-2" style={{ color: '#910d22' }}>Poll ID URL</label>
                     <div className="flex items-center">
                         <input
                             type="text"
                             value={`http://localhost:5173/${poll_id}`}
                             readOnly
-                            className="border border-gray-300 p-2 w-full mr-2 rounded-md"
+                            className="border border-gray-300 bg-gray-100 text-black p-2 flex-1 mr-2 rounded-md" // make text box flexible
                         />
                         <button
-                            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                            className="bg-[#910d22] text-white py-2 px-4 rounded-md hover:bg-[#a41f30] transition-colors duration-200"
                             onClick={handleCopy}
                         >
                             Copy URL
@@ -156,18 +159,21 @@ const PollAdmin = () => {
                     </div>
                 </div>
 
-                <p className="text-lg mb-4"><strong>Description:</strong> {description}</p>
+                {/* Updated Description Paragraph */}
+                <p className="text-lg mb-4">
+                    <strong style={{ color: '#910d22' }}>Description:</strong> <span style={{ color: 'black' }}>{description}</span>
+                </p>
 
-                <h3 className="text-xl font-bold mb-2">Options and Votes</h3>
+                <h3 className="text-xl font-bold mb-2" style={{ color: '#910d22' }}>Options and Votes</h3>
                 <ul className="mb-6 grid grid-cols-2 gap-4">
                     {options.map((option, index) => (
-                        <li key={index} className="p-4 border rounded-md bg-gray-50">
-                            <span className="font-semibold">{option}:</span> {counts[option] || 0} votes
+                        <li key={index} className="p-4 border border-gray-300 rounded-md bg-gray-50 transition-shadow duration-200 hover:shadow-md">
+                            <span className="font-semibold text-black">{option}:</span> <span className="text-black">{counts[option] || 0} votes</span>
                         </li>
                     ))}
                 </ul>
 
-                <h3 className="text-xl font-bold mb-4">Pie Chart</h3>
+                <h3 className="text-xl font-bold mb-4" style={{ color: '#910d22' }}>Pie Chart</h3>
                 <div className="flex flex-col items-center">
                     <div className="w-full max-w-md">
                         <Pie data={pieData} options={pieOptions} />
@@ -177,7 +183,7 @@ const PollAdmin = () => {
                 <div className="mt-6">
                     {!isRevealed ? (
                         <button
-                            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                            className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition-colors duration-200"
                             onClick={handleReveal}
                         >
                             Reveal Poll Results

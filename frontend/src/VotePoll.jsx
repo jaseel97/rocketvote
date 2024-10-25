@@ -26,6 +26,7 @@ const VotePoll = () => {
     const [selectedOptions, setSelectedOptions] = useState({});
     const [showUsernameModal, setShowUsernameModal] = useState(!username);
     const [revealed, setRevealed] = useState(false);
+
     useEffect(() => {
         const pollInterval = setInterval(() => {
             fetch(`http://localhost:8080/${poll_id}`)
@@ -156,10 +157,10 @@ const VotePoll = () => {
         };
 
         return (
-            <div className="max-w-7xl w-full m-auto bg-gray-100 p-8">
-                <div className="poll-container bg-white p-8 rounded shadow-md">
-                    <h2 className="text-2xl font-bold mb-4">Poll Results</h2>
-                    <p className="text-lg mb-4"><strong>Description:</strong> {description}</p>
+            <div className="flex justify-center items-center min-h-screen bg-gray-800"> {/* Outer background color */}
+                <div className="poll-container bg-gray-200 p-10 rounded-lg shadow-lg transition-transform duration-300 transform hover:scale-105 max-w-2xl w-full md:max-w-3xl relative"> {/* Increased size and relative positioning */}
+                    <h2 className="text-2xl font-bold mb-4 text-[#910d22]">Poll Results</h2>
+                    <p className="text-lg mb-4 text-gray-700"><strong>Description:</strong> {description}</p>
 
                     <div className="flex flex-col items-center">
                         <div className="w-full max-w-md">
@@ -172,9 +173,9 @@ const VotePoll = () => {
     }
 
     return (
-        <div className="max-w-7xl w-full m-auto bg-gray-100 p-8">
-            <div className="poll-container bg-white p-8 rounded shadow-md">
-                <h2 className="text-2xl font-bold mb-4">{description}</h2>
+        <div className="flex justify-center items-center min-h-screen bg-gray-800"> {/* Outer background color */}
+            <div className="poll-container bg-gray-200 p-10 rounded-lg shadow-lg transition-transform duration-300 transform hover:scale-105 max-w-2xl w-full md:max-w-3xl relative"> {/* Increased size and relative positioning */}
+                <h2 className="text-2xl font-bold mb-4 text-[#910d22]">{description}</h2>
 
                 <form onSubmit={handleSubmit}>
                     {options.map((option, index) => (
@@ -208,7 +209,7 @@ const VotePoll = () => {
                     
                     <button
                         type="submit"
-                        className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                        className="mt-4 bg-[#910d22] text-white py-2 px-4 rounded hover:bg-[#b5162b] transition duration-300"
                     >
                         Submit
                     </button>
@@ -224,14 +225,14 @@ const VotePoll = () => {
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Your Username"
                                 autoFocus
                                 required
                             />
                             <button
                                 type="submit"
-                                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
                             >
                                 Submit
                             </button>
