@@ -1,20 +1,56 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useFetch from "./useFetch"; 
 
 const CreatePoll = () => {
-    const[description, setdescription] = useState("");
+    const [description, setDescription] = useState("");
     const [options, setOptions] = useState([""]);
     const [activeTemplate, setActiveTemplate] = useState("");
+    const [multiSelection, setMultiSelection] = useState(false);
+    const navigate = useNavigate(); 
+
+    const { data: templates, isPending, error } = useFetch("http://localhost:8080/templates");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const pollDetails = {description, options};
-        console.log(pollDetails);
+
+        const pollDetails = {
+            description,
+            type: activeTemplate || "custom",
+            options,
+            revealed: 0,
+            multi_selection: multiSelection ? 1 : 0,
+        };
+
+        fetch("http://localhost:8080/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pollDetails),
+        })
+        .then((res) => {
+            if (!res.ok) throw new Error("Failed to create poll");
+            return res.json();
+        })
+        .then((responseData) => {
+            console.log("Poll Created:", responseData);
+            if (responseData.poll_id) {
+                const voteUrl = `http://localhost:5173/${responseData.poll_id}`;
+                window.open(voteUrl, "_blank");
+            }
+            if (responseData.redirect_url) {
+                navigate(responseData.redirect_url, { 
+                    state: { redirect_url: responseData.redirect_url, poll_id: responseData.poll_id } 
+                });
+            }
+        })
+        .catch((err) => console.error("Error:", err));
     };
-    
+
     const handleReset = () => {
-        setdescription("");
+        setDescription("");
         setOptions([""]);
         setActiveTemplate("");
+        setMultiSelection(false);
     };
 
     const handleAddOption = (index) => {
@@ -34,90 +70,108 @@ const CreatePoll = () => {
         setOptions(updatedOptions);
     };
 
-    const handleFibonacci = () => {
-        const fibonacciOptions = ["1", "2", "3", "5", "8", "13"];
-        setOptions(fibonacciOptions);
-        setActiveTemplate("fibonacci");
+    const handleTemplateSelection = (template) => {
+        setOptions(template.options);
+        setActiveTemplate(template.type);
+        setMultiSelection(template.multi_selection === 1);
     };
 
-    const handleTshirt = () => {
-        const fibonacciOptions = ["S", "M", "L"];
-        setOptions(fibonacciOptions);
-        setActiveTemplate("tshirt");
-    };
+    return (
+        <div className="min-h-screen w-full bg-gray-800 flex items-center justify-center p-4"> {/* Darker outer background */}
+            <div className="w-full max-w-4xl bg-gray-200 rounded-lg shadow-md p-8 md:p-12 transition-transform transform hover:scale-95"> {/* Lighter inner background with zoom-out effect */}
+                <div className="flex flex-col md:flex-row">
+                    {/* Template Section */}
+                    <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
+                        <h2 className="text-2xl font-bold text-[#910d22] mb-4">Poll Templates</h2>
+                        {error && <p className="text-red-500">{error}</p>}
+                        {isPending && <p>Loading templates...</p>}
+                        <div className="flex flex-wrap">
+                            {templates && Object.values(templates).map((template) => (
+                                <div
+                                    key={template.type}
+                                    onClick={() => handleTemplateSelection(template)}
+                                    className={`border w-full sm:w-1/2 md:w-1/3 h-20 cursor-pointer mr-4 mb-4 text-center rounded-lg transition-all transform ${
+                                        activeTemplate === template.type
+                                            ? "bg-[#910d22] text-white scale-105"
+                                            : "bg-gray-300 hover:bg-[#910d22] hover:text-white"
+                                    }`}
+                                >
+                                    <p className="pt-6">{template.type}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-    const handleConfidence = () => {
-        const fibonacciOptions = ["👍", "👎"];
-        setOptions(fibonacciOptions);
-        setActiveTemplate("confidence");
-    };
-    
-    return(
-        <div className="max-w-7xl w-full m-auto bg-gray-100">
-        <div className="flex flex-row mt-5 border-2 rounded-sm p-12 max-h-full">
-            <div className="w-full text-start">
-                <h2 className="text-xl font-bold mb-8">Poll Templates</h2>
-                <div id="templates" className="flex flex-row">
-                    <div onClick={handleFibonacci} id="fibonacci" className={`border-2 w-1/5 h-20 cursor-pointer mr-6 ${activeTemplate == "fibonacci" ? "bg-gray-400" : "bg-gray-200 hover:bg-gray-400"}`}>
-                        <p className="m-auto text-center pt-6">Fibonacci</p>
-                    </div>
-                    <div onClick={handleTshirt} id="tshirt" className={`border-2 w-1/5 h-20 cursor-pointer mr-6 ${activeTemplate == "tshirt" ? "bg-gray-400" : "bg-gray-200 hover:bg-gray-400"}`}>
-                        <p className="m-auto text-center pt-6">Tshirt</p>
-                    </div>
-                    <div onClick={handleConfidence} id="confidence" className={`border-2 w-1/5 h-20 cursor-pointer mr-6 ${activeTemplate == "confidence" ? "bg-gray-400" : "bg-gray-200 hover:bg-gray-400"}`}>
-                        <p className="m-auto text-center pt-6">Confidence</p>
+                    {/* Poll Form Section */}
+                    <div className="w-full md:w-1/2">
+                        <h2 className="text-2xl font-bold text-[#910d22] mb-4">Create a Poll</h2>
+                        <form onSubmit={handleSubmit}>
+                            <label className="block font-semibold mb-2">Description/Question</label>
+                            <textarea
+                                required
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                className="w-full p-3 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22] transition-all"
+                                placeholder="Enter your poll question"
+                            ></textarea>
+
+                            <div className="mb-6">
+                                <input
+                                    type="checkbox"
+                                    checked={multiSelection}
+                                    onChange={(e) => setMultiSelection(e.target.checked)}
+                                    className="mr-2 cursor-pointer"
+                                />
+                                <label className="font-semibold">Allow Multiple Selections</label>
+                            </div>
+
+                            <label className="block font-semibold mb-4">Options</label>
+                            {options.map((option, index) => (
+                                <div key={index} className="flex items-center mb-4">
+                                    <textarea
+                                        value={option}
+                                        onChange={(e) => handleOptionChange(index, e.target.value)}
+                                        className="w-2/3 h-10 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22] transition-all"
+                                        placeholder={`Option ${index + 1}`}
+                                    ></textarea>
+                                    <button
+                                        type="button"
+                                        className="ml-2 bg-[#910d22] text-white px-4 py-1 rounded-md hover:bg-[#b5162b] transition-all"
+                                        onClick={() => handleDeleteOption(index)}
+                                        disabled={options.length === 1}
+                                    >
+                                        Delete
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="ml-2 bg-gray-600 text-white px-4 py-1 rounded-md hover:bg-gray-700 transition-all"
+                                        onClick={() => handleAddOption(index)}
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                            ))}
+
+                            <div className="mt-6 flex">
+                                <button 
+                                    className="mr-4 bg-[#910d22] text-white px-6 py-2 rounded-md hover:bg-[#b5162b] transition-all"
+                                >
+                                    Create Poll
+                                </button>
+                                <button
+                                    type="button"
+                                    className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-all"
+                                    onClick={handleReset}
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
-            <div className="w-full text-start">
-                <h2 className="text-xl font-bold mb-8">Poll Details</h2>
-                <form onSubmit={handleSubmit}>
-                    <label className="font-semibold">Description/Question</label> 
-                    <textarea
-                        required
-                        value={description}
-                        onChange={(e) => setdescription(e.target.value)}
-                                            className="w-4/5 p-2 box-border border border-gray-300 block resize-none mb-6" placeholder="Description / Question for the Poll"
-                                            ></textarea>
-                    <label className="font-semibold my-10">Options</label> 
-                    {options.map((option, index) => (
-                        <div key={index} className="flex items-center my-2">
-                            <textarea
-                                value={option}
-                                onChange={(e) => handleOptionChange(index, e.target.value)}
-                                className="w-1/2 h-10 py-[6px] px-[10px] box-border border border-gray-300 resize-none"
-                                placeholder={`Option ${index + 1}`}
-                            ></textarea>
-                            <button
-                                type="button"
-                                className="ml-4 w-20 mr-4 bg-red-500 text-white p-1 rounded-md cursor-pointer hover:bg-red-600"
-                                onClick={() => handleDeleteOption(index)}
-                                disabled={options.length === 1} 
-                            >
-                                Delete
-                            </button>
-                            <button
-                        type="button"
-                        className="w-20 block bg-green-500 text-white p-1 rounded-md cursor-pointer hover:bg-green-600"
-                        onClick={() => handleAddOption(index)}
-                    >
-                        Add
-                    </button>
-                        </div>
-                    ))}
-                    <div className="flex flex-row justify-start">
-                    <button className="w-24 mr-10 block bg-blue-500 text-white p-1 rounded-md cursor-pointer hover:bg-blue-600">
-                        Create Poll
-                        </button>
-                    <button className="w-24 block bg-blue-500 text-white p-1 rounded-md cursor-pointer hover:bg-blue-600"onClick={(e) => handleReset()}>
-                        Reset
-                        </button>
-                    </div>
-                    </form>
-            </div>
-        </div>
         </div>
     );
-}
- 
+};
+
 export default CreatePoll;
