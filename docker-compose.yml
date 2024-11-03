@@ -21,28 +21,41 @@ services:
       - redis
     networks:
       - rocketvote-network
-
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "80"
-    depends_on:
-      - api
-    networks:
-      - rocketvote-network
   
   nginx:
-    image: nginx:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "80:80"
     depends_on:
-      - frontend
       - api
     networks:
       - rocketvote-network
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   ports:
+  #     - "80"
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - rocketvote-network
+  
+  # nginx:
+  #   image: nginx:latest
+  #   volumes:
+  #     - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     # - frontend
+  #     - api
+  #   networks:
+  #     - rocketvote-network
 
 networks:
   rocketvote-network:
