@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFetch from "./useFetch";
 
-const apiDomain="http://rocketvote.com/api"
+const apiDomain = "http://rocketvote.com/api";
 
 const CreatePoll = () => {
     const [description, setDescription] = useState("");
     const [options, setOptions] = useState([""]);
     const [activeTemplate, setActiveTemplate] = useState("");
     const [multiSelection, setMultiSelection] = useState(false);
-    const navigate = useNavigate(); 
+    const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+    const navigate = useNavigate();
     const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates`);
 
     const handleSubmit = (e) => {
@@ -28,23 +29,23 @@ const CreatePoll = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(pollDetails),
         })
-        .then((res) => {
-            if (!res.ok) throw new Error("Failed to create poll");
-            return res.json();
-        })
-        .then((responseData) => {
-            console.log("Poll Created:", responseData);
-            if (responseData.poll_id) {
-                const voteUrl = `http://rocketvote.com/${responseData.poll_id}`;
-                window.open(voteUrl, "_blank");
-            }
-            if (responseData.redirect_url) {
-                navigate(responseData.redirect_url, { 
-                    state: { redirect_url: responseData.redirect_url, poll_id: responseData.poll_id } 
-                });
-            }
-        })
-        .catch((err) => console.error("Error:", err));
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to create poll");
+                return res.json();
+            })
+            .then((responseData) => {
+                console.log("Poll Created:", responseData);
+                if (responseData.poll_id) {
+                    const voteUrl = `http://rocketvote.com/${responseData.poll_id}`;
+                    window.open(voteUrl, "_blank");
+                }
+                if (responseData.redirect_url) {
+                    navigate(responseData.redirect_url, {
+                        state: { redirect_url: responseData.redirect_url, poll_id: responseData.poll_id },
+                    });
+                }
+            })
+            .catch((err) => console.error("Error:", err));
     };
 
     const handleReset = () => {
@@ -72,22 +73,36 @@ const CreatePoll = () => {
     };
 
     const handleTemplateSelection = (template) => {
+        setDescription(template.description || "");
         setOptions(template.options);
         setActiveTemplate(template.type);
         setMultiSelection(template.multi_selection === 1);
     };
 
+    const filteredTemplates = templates
+        ? Object.values(templates).filter((template) =>
+              template.type.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : [];
+
     return (
-        <div className="min-h-screen w-full bg-gray-800 flex items-center justify-center p-4"> {/* Darker outer background */}
-            <div className="w-full max-w-4xl bg-gray-200 rounded-lg shadow-md p-8 md:p-12 transition-transform transform hover:scale-95"> {/* Lighter inner background with zoom-out effect */}
+        <div className="min-h-screen w-full bg-gray-800 flex items-center justify-center p-4">
+            <div className="w-full max-w-4xl bg-gray-200 rounded-lg shadow-md p-8 md:p-12">
                 <div className="flex flex-col md:flex-row">
                     {/* Template Section */}
                     <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
                         <h2 className="text-2xl font-bold text-[#910d22] mb-4">Poll Templates</h2>
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search templates"
+                            className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22]"
+                        />
                         {error && <p className="text-red-500">{error}</p>}
                         {isPending && <p>Loading templates...</p>}
                         <div className="flex flex-wrap">
-                            {templates && Object.values(templates).map((template) => (
+                            {filteredTemplates.map((template) => (
                                 <div
                                     key={template.type}
                                     onClick={() => handleTemplateSelection(template)}
@@ -112,7 +127,7 @@ const CreatePoll = () => {
                                 required
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="w-full p-3 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22] transition-all"
+                                className="w-full p-3 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22]"
                                 placeholder="Enter your poll question"
                             ></textarea>
 
@@ -132,12 +147,12 @@ const CreatePoll = () => {
                                     <textarea
                                         value={option}
                                         onChange={(e) => handleOptionChange(index, e.target.value)}
-                                        className="w-2/3 h-10 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22] transition-all"
+                                        className="w-2/3 h-10 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22]"
                                         placeholder={`Option ${index + 1}`}
                                     ></textarea>
                                     <button
                                         type="button"
-                                        className="ml-2 bg-[#910d22] text-white px-4 py-1 rounded-md hover:bg-[#b5162b] transition-all"
+                                        className="ml-2 bg-[#910d22] text-white px-4 py-1 rounded-md"
                                         onClick={() => handleDeleteOption(index)}
                                         disabled={options.length === 1}
                                     >
@@ -145,7 +160,7 @@ const CreatePoll = () => {
                                     </button>
                                     <button
                                         type="button"
-                                        className="ml-2 bg-gray-600 text-white px-4 py-1 rounded-md hover:bg-gray-700 transition-all"
+                                        className="ml-2 bg-gray-600 text-white px-4 py-1 rounded-md"
                                         onClick={() => handleAddOption(index)}
                                     >
                                         Add
@@ -154,14 +169,12 @@ const CreatePoll = () => {
                             ))}
 
                             <div className="mt-6 flex">
-                                <button 
-                                    className="mr-4 bg-[#910d22] text-white px-6 py-2 rounded-md hover:bg-[#b5162b] transition-all"
-                                >
+                                <button className="mr-4 bg-[#910d22] text-white px-6 py-2 rounded-md">
                                     Create Poll
                                 </button>
                                 <button
                                     type="button"
-                                    className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-all"
+                                    className="bg-gray-500 text-white px-6 py-2 rounded-md"
                                     onClick={handleReset}
                                 >
                                     Reset
@@ -176,3 +189,4 @@ const CreatePoll = () => {
 };
 
 export default CreatePoll;
+
