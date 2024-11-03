@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useFetch from "./useFetch"; 
+import useFetch from "./useFetch";
+
+const apiDomain="http://rocketvote.com/api"
 
 const CreatePoll = () => {
     const [description, setDescription] = useState("");
@@ -8,8 +10,7 @@ const CreatePoll = () => {
     const [activeTemplate, setActiveTemplate] = useState("");
     const [multiSelection, setMultiSelection] = useState(false);
     const navigate = useNavigate(); 
-
-    const { data: templates, isPending, error } = useFetch("http://localhost:8080/templates");
+    const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates`);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -22,7 +23,7 @@ const CreatePoll = () => {
             multi_selection: multiSelection ? 1 : 0,
         };
 
-        fetch("http://localhost:8080/create", {
+        fetch(`${apiDomain}/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(pollDetails),
@@ -34,7 +35,7 @@ const CreatePoll = () => {
         .then((responseData) => {
             console.log("Poll Created:", responseData);
             if (responseData.poll_id) {
-                const voteUrl = `http://localhost:5173/${responseData.poll_id}`;
+                const voteUrl = `http://rocketvote.com/${responseData.poll_id}`;
                 window.open(voteUrl, "_blank");
             }
             if (responseData.redirect_url) {

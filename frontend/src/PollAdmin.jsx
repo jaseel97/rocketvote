@@ -4,6 +4,8 @@ import { Pie } from 'react-chartjs-2';
 import { Chart, ArcElement, Tooltip } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
+const apiDomain="http://rocketvote.com/api"
+
 Chart.register(ArcElement, Tooltip, ChartDataLabels);
 
 const generateColors = (numColors) => {
@@ -25,6 +27,8 @@ const PollAdmin = () => {
     const [isPending, setIsPending] = useState(true);
     const [error, setError] = useState(null);
     const [isRevealed, setIsRevealed] = useState(false);
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [copySuccess, setCopySuccess] = useState(false);
 
     const fetchPollData = () => {
         if (!redirect_url) {
@@ -33,7 +37,7 @@ const PollAdmin = () => {
             return;
         }
         
-        fetch(`http://localhost:8080${redirect_url}`)
+        fetch(`${apiDomain}${redirect_url}`)
             .then(res => {
                 if (!res.ok) {
                     throw new Error("Failed to fetch poll data");
@@ -60,12 +64,18 @@ const PollAdmin = () => {
         return () => clearInterval(intervalId);
     }, [redirect_url]);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(`http://localhost:5173/${poll_id}`);
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(`http://rocketvote.com/${poll_id}`);
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000); // Reset after 2 seconds
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
     };
 
     const handleReveal = () => {
-        fetch(`http://localhost:8080${redirect_url}`, {
+        fetch(`${apiDomain}/${redirect_url}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -84,6 +94,13 @@ const PollAdmin = () => {
         .catch((err) => {
             console.error("Error revealing poll:", err);
         });
+    };
+
+    const getVotersForOption = (option) => {
+        if (!pollData?.votes) return [];
+        return Object.entries(pollData.votes)
+            .filter(([_, votes]) => votes.includes(option))
+            .map(([voter]) => voter);
     };
 
     if (isPending) return <p style={{ color: 'black' }}>Loading poll data...</p>;
@@ -112,18 +129,10 @@ const PollAdmin = () => {
         responsive: true,
         plugins: {
             datalabels: {
-                color: '#fff',
-                formatter: (value, context) => {
-                    const option = context.chart.data.labels[context.dataIndex];
-                    const percentage = ((value / totalVotes) * 100).toFixed(2);
-                    return `${option}: ${percentage}%`;
-                },
-                font: {
-                    weight: 'bold',
-                    size: 14
-                }
+                display: false // Hide all data labels by default
             },
             tooltip: {
+                enabled: true,
                 callbacks: {
                     label: (tooltipItem) => {
                         const option = options[tooltipItem.dataIndex];
@@ -132,12 +141,44 @@ const PollAdmin = () => {
                     }
                 }
             }
+        },
+        onHover: (event, elements) => {
+            const chart = event?.chart;
+            if (!chart) return;
+            
+            // Hide all labels
+            chart.data.datasets[0].datalabels = { display: false };
+            
+            if (elements && elements.length > 0) {
+                // Show label only for hovered element
+                const index = elements[0].index;
+                chart.data.datasets[0].datalabels = chart.data.labels.map((_, i) => ({
+                    display: i === index,
+                    color: '#fff',
+                    formatter: (value, context) => {
+                        const option = context.chart.data.labels[context.dataIndex];
+                        const percentage = ((value / totalVotes) * 100).toFixed(2);
+                        return `${option}: ${percentage}%`;
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    }
+                }));
+            }
+            chart.update('none');
+        },
+        onClick: (event, elements) => {
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const option = options[index];
+                setSelectedOption(selectedOption === option ? null : option);
+            }
         }
     };
 
     return (
         <div className="max-w-7xl w-full m-auto bg-gray-800 p-8">
-            {/* Inner Div with White Background */}
             <div className="poll-container bg-white text-black p-8 rounded-lg shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: '#910d22' }}>Poll Results</h2>
                 
@@ -146,37 +187,62 @@ const PollAdmin = () => {
                     <div className="flex items-center">
                         <input
                             type="text"
-                            value={`http://localhost:5173/${poll_id}`}
+                            value={`http://rocketvote.com/${poll_id}`}
                             readOnly
-                            className="border border-gray-300 bg-gray-100 text-black p-2 flex-1 mr-2 rounded-md" // make text box flexible
+                            className="border border-gray-300 bg-gray-100 text-black p-2 flex-1 mr-2 rounded-md"
                         />
                         <button
-                            className="bg-[#910d22] text-white py-2 px-4 rounded-md hover:bg-[#a41f30] transition-colors duration-200"
+                            className={`${
+                                copySuccess 
+                                    ? 'bg-green-500 hover:bg-green-600' 
+                                    : 'bg-[#910d22] hover:bg-[#a41f30]'
+                            } text-white py-2 px-4 rounded-md transition-colors duration-200`}
                             onClick={handleCopy}
                         >
-                            Copy URL
+                            {copySuccess ? 'Copied!' : 'Copy URL'}
                         </button>
                     </div>
                 </div>
 
-                {/* Updated Description Paragraph */}
                 <p className="text-lg mb-4">
                     <strong style={{ color: '#910d22' }}>Description:</strong> <span style={{ color: 'black' }}>{description}</span>
                 </p>
 
-                <h3 className="text-xl font-bold mb-2" style={{ color: '#910d22' }}>Options and Votes</h3>
-                <ul className="mb-6 grid grid-cols-2 gap-4">
-                    {options.map((option, index) => (
-                        <li key={index} className="p-4 border border-gray-300 rounded-md bg-gray-50 transition-shadow duration-200 hover:shadow-md">
-                            <span className="font-semibold text-black">{option}:</span> <span className="text-black">{counts[option] || 0} votes</span>
-                        </li>
-                    ))}
-                </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 className="text-xl font-bold mb-4" style={{ color: '#910d22' }}>Options and Votes</h3>
+                        <div className="space-y-4">
+                            {options.map((option, index) => (
+                                <div 
+                                    key={index}
+                                    className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                        selectedOption === option ? 'border-[#910d22] shadow-md' : 'border-gray-300'
+                                    }`}
+                                    onClick={() => setSelectedOption(selectedOption === option ? null : option)}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold">{option}</span>
+                                        <span>{counts[option] || 0} votes</span>
+                                    </div>
+                                    {selectedOption === option && (
+                                        <div className="mt-2 pt-2 border-t">
+                                            <p className="text-sm text-gray-600">
+                                                Voters: {getVotersForOption(option).join(', ')}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-                <h3 className="text-xl font-bold mb-4" style={{ color: '#910d22' }}>Pie Chart</h3>
-                <div className="flex flex-col items-center">
-                    <div className="w-full max-w-md">
-                        <Pie data={pieData} options={pieOptions} />
+                    <div>
+                        <h3 className="text-xl font-bold mb-4" style={{ color: '#910d22' }}>Pie Chart</h3>
+                        <div className="flex flex-col items-center">
+                            <div className="w-full max-w-md">
+                                <Pie data={pieData} options={pieOptions} />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
