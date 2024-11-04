@@ -10,6 +10,7 @@ const CreatePoll = () => {
     const [activeTemplate, setActiveTemplate] = useState("");
     const [multiSelection, setMultiSelection] = useState(false);
     const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+    const [templateTitle, setTemplateTitle] = useState("");
     const navigate = useNavigate();
     const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates`);
 
@@ -77,13 +78,44 @@ const CreatePoll = () => {
         setOptions(template.options);
         setActiveTemplate(template.type);
         setMultiSelection(template.multi_selection === 1);
+        setTemplateTitle(template.type); // Set the title to the template's type
+    };
+
+
+    const handleSaveTemplate = () => {
+        if (!templateTitle.trim()) {
+            alert("Title cannot be empty.");
+            return;
+        }
+
+        const templateData = {
+            type: templateTitle,
+            description,
+            options,
+            revealed: 0,
+            multi_selection: multiSelection ? 1 : 0,
+        };
+
+        fetch(`${apiDomain}/templates`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(templateData),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to save template");
+                return res.json();
+            })
+            .then((responseData) => {
+                console.log("Template Saved:", responseData);
+                alert("Template saved successfully.");
+            })
+            .catch((err) => console.error("Error:", err));
     };
 
     const filteredTemplates = templates
         ? Object.values(templates).filter((template) =>
-              template.type.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        : [];
+            template.type.toLowerCase().includes(searchTerm.toLowerCase())
+        ) : [];
 
     return (
         <div className="min-h-screen w-full bg-gray-800 flex items-center justify-center p-4">
@@ -101,16 +133,15 @@ const CreatePoll = () => {
                         />
                         {error && <p className="text-red-500">{error}</p>}
                         {isPending && <p>Loading templates...</p>}
-                        <div className="flex flex-wrap">
+                        <div className={`grid gap-4 ${filteredTemplates.length > 4 ? "grid-cols-3" : "grid-cols-2"}`}>
                             {filteredTemplates.map((template) => (
                                 <div
                                     key={template.type}
                                     onClick={() => handleTemplateSelection(template)}
-                                    className={`border w-full sm:w-1/2 md:w-1/3 h-20 cursor-pointer mr-4 mb-4 text-center rounded-lg transition-all transform ${
-                                        activeTemplate === template.type
-                                            ? "bg-[#910d22] text-white scale-105"
-                                            : "bg-gray-300 hover:bg-[#910d22] hover:text-white"
-                                    }`}
+                                    className={`border w-full h-20 cursor-pointer text-center rounded-lg transition-all transform ${activeTemplate === template.type
+                                        ? "bg-[#910d22] text-white scale-105"
+                                        : "bg-gray-300 hover:bg-[#910d22] hover:text-white"
+                                        }`}
                                 >
                                     <p className="pt-6">{template.type}</p>
                                 </div>
@@ -168,8 +199,22 @@ const CreatePoll = () => {
                                 </div>
                             ))}
 
-                            <div className="mt-6 flex">
-                                <button className="mr-4 bg-[#910d22] text-white px-6 py-2 rounded-md">
+                            {/* Template Title Input */}
+                            <label className="block font-semibold mt-6">Template Title</label>
+                            <input
+                                type="text"
+                                value={templateTitle}
+                                onChange={(e) => setTemplateTitle(e.target.value)}
+                                className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#910d22]"
+                                placeholder="Enter template title"
+                            />
+
+                            {/* Buttons Section */}
+                            <div className="mt-6 flex gap-4">
+                                <button
+                                    type="submit"
+                                    className="bg-[#910d22] text-white px-6 py-2 rounded-md"
+                                >
                                     Create Poll
                                 </button>
                                 <button
@@ -178,6 +223,13 @@ const CreatePoll = () => {
                                     onClick={handleReset}
                                 >
                                     Reset
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveTemplate}
+                                    className="bg-blue-500 text-white px-6 py-2 rounded-md"
+                                >
+                                    Save Template
                                 </button>
                             </div>
                         </form>
