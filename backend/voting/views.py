@@ -10,16 +10,17 @@ from .utils import get_poll, get_poll_from_creation_id, get_poll_results, make_p
 from .models import PollTemplate
 from .redis_pool import get_redis_connection
 
-required_fields = ['type', 'options', 'revealed', 'multi_selection']
+# required_fields = ['type', 'options', 'revealed', 'multi_selection']
+required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
+result_limit = 12
 
 @csrf_exempt
 def templates(request):
     if request.method == 'GET':
         try:
-            results = PollTemplate.objects.all()
-            response = {}
-            for result in results:
-                response[result.title] = json.loads(result.template)
+            query = request.GET.get('search', '')
+            results = PollTemplate.objects.filter(title__icontains=query) if query else PollTemplate.objects.all()
+            response = {result.title: json.loads(result.template) for result in results[:12]}
             return JsonResponse(response, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
@@ -82,7 +83,6 @@ def create(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
 
-    # required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
     if not all(field in poll_body for field in required_fields):
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
