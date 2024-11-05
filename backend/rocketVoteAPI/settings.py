@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'voting.apps.VotingConfig',
     'corsheaders',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -87,6 +88,23 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],  # Redis host and port
+        },
+    },
+}
+# CHANNELS_WS_PROTOCOLS = ["websocket"]
+# CHANNELS_WS_ORIGIN_WHITELIST = [
+#     "http://rocketvote.com",
+#     "https://rocketvote.com",
+#     "127.0.0.1",
+#     "localhost",
+#     "172.18.0.4"
+# ]
 
 
 # Password validation

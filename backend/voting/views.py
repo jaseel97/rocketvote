@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.http import HttpResponse, HttpResponseServerError, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 
@@ -68,7 +70,7 @@ def templates(request):
 
 
 
-# takes the poll meta data from the UI and creates a new poll
+# takes the poll metadata from the UI and creates a new poll
 @csrf_exempt
 def create(request):
     print("---->", request.method)
@@ -80,7 +82,7 @@ def create(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
 
-    required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
+    # required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
     if not all(field in poll_body for field in required_fields):
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
@@ -212,6 +214,13 @@ def poll_admin(request, creation_id):
         try:
             redis_conn.set(poll_metadata_key, poll_metadata)
             #TODO : send event through WS
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'poll_{poll_id}',
+                {
+                    'type': 'poll_revealed',
+                }
+            )
         except Exception as e:
             return JsonResponse({'error': f'Failed to update poll data: {str(e)}'}, status=500)
 
