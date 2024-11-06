@@ -182,6 +182,7 @@ def cast_vote(request, poll_id):
 @csrf_exempt
 def poll_admin(request, creation_id):
     redis_conn = get_redis_connection()
+
     if request.method == "GET":
         poll_id, poll = get_poll_from_creation_id(redis_conn, creation_id)
         if poll is None:
@@ -196,6 +197,7 @@ def poll_admin(request, creation_id):
         }
         print("Response : ", response)
         return JsonResponse(response, status=200)
+
     elif request.method == "PATCH":
         poll_id, poll = get_poll_from_creation_id(redis_conn, creation_id)
         if poll is None:
@@ -212,5 +214,12 @@ def poll_admin(request, creation_id):
             return JsonResponse({'error': f'Failed to update poll data: {str(e)}'}, status=500)
 
         return JsonResponse({'message':'Poll results revealed'}, status=200)
+
+    elif request.method == "DELETE":
+        # Call delete_poll function
+        if delete_poll(redis_conn, creation_id):
+            return JsonResponse({'message': f'Poll with creation_id {creation_id} deleted successfully!'}, status=200)
+        else:
+            return JsonResponse({'error': 'Poll not found or already deleted'}, status=404)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)

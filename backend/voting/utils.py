@@ -84,3 +84,28 @@ def get_poll_results(redis_conn, poll_id):
         counts = {option.decode('utf-8'): int(score) for option, score in counts}
 
     return [votes, counts]
+
+def delete_poll(redis_conn, creation_id):
+   
+    poll_id = redis_conn.get(f'{creation_id}:poll_id')
+    if poll_id is None:
+        print("Poll not found for given creation_id.")
+        return False
+
+    # Decode poll_id
+    poll_id = poll_id.decode('utf-8')
+    
+    # Define all the keys related to this poll
+    keys_to_delete = [
+        f'{poll_id}:metadata',
+        f'{poll_id}:votes',
+        f'{poll_id}:count',
+        f'{creation_id}:poll_id'
+    ]
+
+    # Delete each key from Redis
+    for key in keys_to_delete:
+        redis_conn.delete(key)
+    
+    print(f"All keys related to poll_id {poll_id} have been deleted.")
+    return True
