@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from nanoid import generate
 
+from .tasks import delete_poll
 from .utils import get_poll, get_poll_from_creation_id, get_poll_results, make_poll_metadata_string
 from .models import PollTemplate
 from .redis_pool import get_redis_connection
@@ -211,6 +212,7 @@ def poll_admin(request, creation_id):
         
         try:
             redis_conn.set(poll_metadata_key, poll_metadata)
+            delete_poll.apply_async((creation_id,), countdown=10)
             #TODO : send event through WS
         except Exception as e:
             return JsonResponse({'error': f'Failed to update poll data: {str(e)}'}, status=500)
