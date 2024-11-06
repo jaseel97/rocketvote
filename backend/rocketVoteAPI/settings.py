@@ -93,19 +93,10 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],  # Redis host and port
+            "hosts": [('redis://redis:6379/3')],
         },
     },
 }
-# CHANNELS_WS_PROTOCOLS = ["websocket"]
-# CHANNELS_WS_ORIGIN_WHITELIST = [
-#     "http://rocketvote.com",
-#     "https://rocketvote.com",
-#     "127.0.0.1",
-#     "localhost",
-#     "172.18.0.4"
-# ]
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
