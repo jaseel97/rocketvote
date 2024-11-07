@@ -75,7 +75,7 @@ const PollAdmin = () => {
     };
 
     const handleReveal = () => {
-        fetch(`${apiDomain}/${redirect_url}`, {
+        fetch(`${apiDomain}${redirect_url}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -94,6 +94,7 @@ const PollAdmin = () => {
         .catch((err) => {
             console.error("Error revealing poll:", err);
         });
+        console.log(`${apiDomain}${redirect_url}`)
     };
 
     const getVotersForOption = (option) => {

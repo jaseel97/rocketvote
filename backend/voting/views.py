@@ -218,9 +218,10 @@ def poll_admin(request, creation_id):
             redis_conn.set(poll_metadata_key, poll_metadata)
 
             #schedule auto delete
-            delete_poll.apply_async((creation_id,), countdown=delete_seconds)
+            task = delete_poll.apply_async((creation_id,), countdown=delete_seconds)
+            print(f"Scheduled delete task with ID: {task.id}")
             
-            #send revealed event to participants
+            # send revealed event to participants
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f'poll_{poll_id}',
