@@ -138,6 +138,8 @@ const CreatePoll = () => {
         focus:bg-gray-50 dark:focus:bg-gray-700
         hover:border-red-500 dark:hover:border-red-400 
         hover:bg-gray-50 dark:hover:bg-gray-700
+        not-placeholder-shown:bg-gray-50 dark:not-placeholder-shown:bg-gray-700
+        not-placeholder-shown:border-red-500 dark:not-placeholder-shown:border-red-400
         peer 
         transition-all duration-300
     `;
@@ -164,8 +166,10 @@ const CreatePoll = () => {
         peer-hover:-translate-y-4
         peer-focus:text-red-500 dark:peer-focus:text-red-400
         peer-hover:text-red-500 dark:peer-hover:text-red-400
+        peer-[&:not(:placeholder-shown)]:text-red-500 dark:peer-[&:not(:placeholder-shown)]:text-red-400
         peer-focus:font-medium
         peer-hover:font-medium
+        peer-[&:not(:placeholder-shown)]:font-medium
         left-1
     `;
 
@@ -190,8 +194,10 @@ const CreatePoll = () => {
         peer-hover:-translate-y-4
         peer-focus:text-red-500 dark:peer-focus:text-red-400
         peer-hover:text-red-500 dark:peer-hover:text-red-400
+        peer-[&:not(:placeholder-shown)]:text-red-500 dark:peer-[&:not(:placeholder-shown)]:text-red-400
         peer-focus:font-medium
         peer-hover:font-medium
+        peer-[&:not(:placeholder-shown)]:font-medium
         left-1
     `;
     const addDeleteButtons = `
