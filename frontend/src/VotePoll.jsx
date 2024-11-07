@@ -11,7 +11,8 @@ import {
 import { Pie } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-const apiDomain = "http://rocketvote.com/api";
+// const apiDomain = "http://rocketvote.com/api";
+const apiDomain = "http://localhost:8080";
 
 ChartJS.register(
     ArcElement,

@@ -50,7 +50,8 @@ const CreatePoll = () => {
             })
             .then((responseData) => {
                 if (responseData.poll_id) {
-                    window.open(`http://rocketvote.com/${responseData.poll_id}`, "_blank");
+                    // window.open(`http://rocketvote.com/${responseData.poll_id}`, "_blank");
+                    window.open(`http://127.0.0.1:5173/${responseData.poll_id}`, "_blank");
                 }
                 if (responseData.redirect_url) {
                     navigate(responseData.redirect_url, {
