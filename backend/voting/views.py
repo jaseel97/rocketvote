@@ -1,9 +1,13 @@
+import os
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.http import HttpResponse, HttpResponseServerError, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 
 import json
 from nanoid import generate
 
+from .tasks import delete_poll
 from .utils import get_poll, get_poll_from_creation_id, get_poll_results, make_poll_metadata_string
 from .models import PollTemplate
 from .redis_pool import get_redis_connection
@@ -11,6 +15,8 @@ from .redis_pool import get_redis_connection
 # required_fields = ['type', 'options', 'revealed', 'multi_selection']
 required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
 result_limit = 12
+
+delete_seconds = int(os.getenv('AUTO_DELETE_DAYS', '10'))*24*60*60
 
 @csrf_exempt
 def templates(request):
@@ -69,10 +75,9 @@ def templates(request):
 
 
 
-# takes the poll meta data from the UI and creates a new poll
+# takes the poll metadata from the UI and creates a new poll
 @csrf_exempt
 def create(request):
-    print("---->", request.method)
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
@@ -211,7 +216,19 @@ def poll_admin(request, creation_id):
         
         try:
             redis_conn.set(poll_metadata_key, poll_metadata)
-            #TODO : send event through WS
+
+            #schedule auto delete
+            task = delete_poll.apply_async((creation_id,), countdown=delete_seconds)
+            print(f"Scheduled delete task with ID: {task.id}")
+            
+            # send revealed event to participants
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'poll_{poll_id}',
+                {
+                    'type': 'poll_revealed',
+                }
+            )
         except Exception as e:
             return JsonResponse({'error': f'Failed to update poll data: {str(e)}'}, status=500)
 

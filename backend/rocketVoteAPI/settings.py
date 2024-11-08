@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'voting.apps.VotingConfig',
     'corsheaders',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -88,6 +89,14 @@ DATABASES = {
     }
 }
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('redis://redis:6379/3')],
+        },
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -129,3 +138,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL','redis://redis:6379/1')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND','redis://redis:6379/1')
+CELERY_IMPORTS = ('voting.tasks',)
