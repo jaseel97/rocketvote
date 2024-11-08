@@ -14,7 +14,7 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "${API_PORT}"
+      - "${API_PORT}:${API_PORT}"
     env_file:
       - ./dev.env
     depends_on:

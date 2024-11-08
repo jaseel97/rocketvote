@@ -14,7 +14,7 @@ const PollAdmin = () => {
     const [copySuccess, setCopySuccess] = useState(false);
     const [hoveredOption, setHoveredOption] = useState(null);
     
-    const apiDomain = "http://localhost:8080";
+    const apiDomain = "http://rocketvote.com/api";
 
     
 
@@ -49,7 +49,7 @@ const PollAdmin = () => {
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(`http://127.0.0.1:5173/${poll_id}`);
+            await navigator.clipboard.writeText(`http://rocketvote.com/${poll_id}`);
             setCopySuccess(true);
             setTimeout(() => setCopySuccess(false), 2000);
         } catch (err) {

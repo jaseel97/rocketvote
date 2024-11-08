@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import CustomPieChart from './CustomPieChart';
 
-const apiDomain = "http://localhost:8080";
+const apiDomain = "http://rocketvote.com/api";
+const wsBaseUrl = "ws://rocketvote.com/ws";
+// const host = 'localhost:8080';
+// const wsBaseUrl = `ws://${host}/ws`;
 const USERNAME_STORAGE_KEY = 'poll_username';
 const POLL_ID_STORAGE_KEY = 'last_poll_id';
 
@@ -123,6 +126,7 @@ const VotePoll = () => {
     const [submitStatus, setSubmitStatus] = useState('idle');
     const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
     const [hoveredOption, setHoveredOption] = useState(null);
+    const [socket, setSocket] = useState(null);
 
     // Load username from localStorage on component mount
     useEffect(() => {
@@ -136,6 +140,42 @@ const VotePoll = () => {
             setShowUsernameModal(true);
             setUsername('');
         }
+    }, [poll_id]);
+
+    useEffect(() => {
+        if (!poll_id) return;
+
+        const ws = new WebSocket(`${wsBaseUrl}/${poll_id}/`);
+        
+        ws.onopen = () => {
+            console.log('WebSocket Connected');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.results_revealed) {
+                setRevealed(true);
+                fetchPollData(); // Fetch latest data when results are revealed
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+            setError('WebSocket connection error');
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket Disconnected');
+        };
+
+        setSocket(ws);
+
+        // Cleanup on unmount
+        return () => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+        };
     }, [poll_id]);
 
     const handleUsernameSubmit = (e) => {
@@ -167,13 +207,6 @@ const VotePoll = () => {
         if (poll_id) {
             fetchPollData();
         }
-    }, [poll_id]);
-
-    useEffect(() => {
-        if (!poll_id) return;
-
-        const pollInterval = setInterval(fetchPollData, 1000);
-        return () => clearInterval(pollInterval);
     }, [poll_id]);
 
     const handleOptionChange = (index, value) => {
