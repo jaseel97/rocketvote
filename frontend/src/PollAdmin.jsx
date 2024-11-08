@@ -1,66 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-
-const generateColors = (numColors) => {
-    const colors = [];
-    const step = 360 / numColors;
-    for (let i = 0; i < numColors; i++) {
-        const hue = i * step;
-        colors.push(`hsl(${hue}, 70%, 60%)`);
-    }
-    return colors;
-};
-
-const PieChart = ({ data }) => {
-    const total = data.reduce((sum, item) => sum + item.value, 0);
-    let currentPercent = 0;
-    
-    const conicGradient = data.map((item) => {
-        const startPercent = currentPercent;
-        const itemPercent = (item.value / total) * 100;
-        currentPercent += itemPercent;
-        return `${item.color} ${startPercent}% ${currentPercent}%`;
-    }).join(', ');
-
-    return (
-        <div className="relative w-64 h-64 mx-auto">
-            <div 
-                className="w-full h-full rounded-full transition-all duration-300 ease-in-out"
-                style={{ 
-                    background: `conic-gradient(${conicGradient})`
-                }}
-            />
-            
-            <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-white dark:bg-gray-750 rounded-full -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out" />
-            
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ease-in-out">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {total}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Total Votes
-                </div>
-            </div>
-            
-            <div className="mt-8">
-                <div className="grid grid-cols-2 gap-2">
-                    {data.map((item, index) => (
-                        <div key={index} className="flex items-center space-x-2 transition-all duration-300 ease-in-out">
-                            <div 
-                                className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: item.color }}
-                            />
-                            <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                {item.label} ({((item.value / total) * 100).toFixed(1)}%)
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
+import { useEffect } from "react";
+import CustomPieChart from './CustomPieChart';
 
 const PollAdmin = () => {
     const location = useLocation();
@@ -72,8 +13,10 @@ const PollAdmin = () => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [copySuccess, setCopySuccess] = useState(false);
     const [hoveredOption, setHoveredOption] = useState(null);
-
+    
     const apiDomain = "http://localhost:8080";
+
+    
 
     const fetchPollData = () => {
         if (!redirect_url) {
@@ -115,7 +58,7 @@ const PollAdmin = () => {
     };
 
     const handleReveal = () => {
-        fetch(`${apiDomain}/${redirect_url}`, {
+        fetch(`${apiDomain}${redirect_url}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ revealed: "1" })
@@ -155,16 +98,19 @@ const PollAdmin = () => {
 
     const { description, options } = pollData.metadata;
     const counts = pollData.counts || {};
-    const colors = generateColors(options.length);
+    
+    // Calculate total votes
+    const totalVotes = options
+        .map(option => Number(counts[option] || 0))
+        .reduce((sum, count) => sum + count, 0);
 
-    const chartData = options
-        .filter(option => counts[option] > 0)
-        .map((option, index) => ({
-            label: option,
-            value: counts[option],
-            color: colors[index]
-        }));
-
+    // Prepare chart data - include all options
+    const chartData = options.map((option) => ({
+        id: option,
+        label: option,
+        value: Number(counts[option] || 0)
+    }));
+    console.log(chartData)
     const inputClasses = `
         block px-2.5 pb-2.5 pt-6 w-full 
         text-base font-medium
@@ -398,13 +344,23 @@ const PollAdmin = () => {
 
                     {/* Right side: Pie Chart */}
                     <div className="w-full md:w-1/2">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Results Visualization</h3>
-                        <div className="bg-white dark:bg-gray-750 rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
-                            <PieChart data={chartData} />
-                        </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                        Results Visualization
+                    </h3>
+                    <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+                {totalVotes > 0 ? (
+                    <CustomPieChart series={[{ data: chartData, 
+                        highlightScope: { fade: 'global', highlight: 'item' },
+                        faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' }, }]} />
+                ) : (
+                    <div className="flex items-center justify-center h-[300px] text-gray-500">
+                        No votes yet
                     </div>
+                )}
+            </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 };

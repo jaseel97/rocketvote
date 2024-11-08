@@ -1,39 +1,10 @@
+import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
-import {
-    Chart as ChartJS,
-    ArcElement,
-    Tooltip,
-    Legend,
-    CategoryScale,
-    LinearScale
-} from 'chart.js';
-import { Pie } from 'react-chartjs-2';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import CustomPieChart from './CustomPieChart';
 
-// const apiDomain = "http://rocketvote.com/api";
 const apiDomain = "http://localhost:8080";
-
-ChartJS.register(
-    ArcElement,
-    Tooltip,
-    Legend,
-    CategoryScale,
-    LinearScale,
-    ChartDataLabels
-);
-
-const generateColors = (numColors) => {
-    const colors = [];
-    const step = 360 / numColors;
-
-    for (let i = 0; i < numColors; i++) {
-        const hue = i * step;
-        const color = `hsl(${hue}, 70%, 60%)`;
-        colors.push(color);
-    }
-    return colors;
-};
+const USERNAME_STORAGE_KEY = 'poll_username';
+const POLL_ID_STORAGE_KEY = 'last_poll_id';
 
 const LoadingSpinner = () => (
     <div className="inline-block h-5 w-5 mr-2 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
@@ -42,7 +13,104 @@ const LoadingSpinner = () => (
 const CheckMark = () => (
     <span className="mr-2 text-lg">✓</span>
 );
+const UsernameModal = ({ username, setUsername, onSubmit }) => {
+    const modalSubmitButtonClasses = `
+        px-8 py-3 rounded-2xl 
+        relative overflow-hidden
+        bg-gradient-to-r from-gray-50 to-gray-100
+        dark:from-gray-800 dark:to-gray-750
+        font-medium
+        border-2
+        text-sky-500 dark:text-sky-400
+        border-sky-500/30 dark:border-sky-400/30
+        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(14,165,233,0.2)]
+        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(56,189,248,0.2)]
+        before:absolute before:inset-0
+        before:bg-gradient-to-r
+        before:from-sky-500/0 before:via-sky-500/10 before:to-sky-500/0
+        before:translate-x-[-200%]
+        hover:before:translate-x-[200%]
+        before:transition-transform before:duration-1000
+        hover:border-sky-500/50 dark:hover:border-sky-400/50
+        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(14,165,233,0.3)]
+        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(56,189,248,0.3)]
+        transition-all duration-300 ease-in-out
+        w-full
+    `;
 
+    const modalInputClasses = `
+        block px-2.5 pb-2.5 pt-4 w-full text-sm 
+        text-gray-900 dark:text-white 
+        bg-gray-100 dark:bg-gray-600 
+        border-0 border-b-2 border-gray-300 dark:border-gray-500
+        rounded-t-lg 
+        appearance-none 
+        focus:outline-none 
+        focus:border-red-500 dark:focus:border-red-400 
+        focus:bg-gray-50 dark:focus:bg-gray-700
+        hover:border-red-500 dark:hover:border-red-400 
+        hover:bg-gray-50 dark:hover:bg-gray-700
+        peer
+        transition-all duration-300
+    `;
+
+    const modalLabelClasses = `
+        absolute text-sm 
+        text-gray-500 dark:text-gray-400 
+        duration-300 transform 
+        -translate-y-4 scale-75 top-2 
+        z-10 origin-[0] 
+        bg-transparent
+        px-2 
+        peer-focus:px-2 
+        peer-hover:px-2
+        peer-placeholder-shown:scale-100 
+        peer-placeholder-shown:-translate-y-1/2 
+        peer-placeholder-shown:top-1/2 
+        peer-focus:top-2 
+        peer-hover:top-2
+        peer-focus:scale-75 
+        peer-hover:scale-75
+        peer-focus:-translate-y-4 
+        peer-hover:-translate-y-4
+        peer-focus:text-red-500 dark:peer-focus:text-red-400
+        peer-hover:text-red-500 dark:peer-hover:text-red-400
+        peer-[&:not(:placeholder-shown)]:text-red-500 dark:peer-[&:not(:placeholder-shown)]:text-red-400
+        peer-focus:font-medium
+        peer-hover:font-medium
+        peer-[&:not(:placeholder-shown)]:font-medium
+        left-1
+    `;
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm" />
+                <div className="relative z-50 bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-lg p-8 w-96 max-w-[90%]">
+                    <form onSubmit={onSubmit}>
+                        <div className="relative mb-6">
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className={modalInputClasses}
+                                placeholder=" "
+                                required
+                            />
+                            <label className={modalLabelClasses}>
+                                Enter username to continue
+                            </label>
+                        </div>
+                        <button 
+                            type="submit"
+                            className={modalSubmitButtonClasses}
+                            disabled={!username.trim()}
+                        >
+                            <span className="relative z-10">Continue</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
+    };
 const VotePoll = () => {
     const { poll_id } = useParams();
     const [pollData, setPollData] = useState(null);
@@ -54,6 +122,30 @@ const VotePoll = () => {
     const [revealed, setRevealed] = useState(false);
     const [submitStatus, setSubmitStatus] = useState('idle');
     const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
+    const [hoveredOption, setHoveredOption] = useState(null);
+
+    // Load username from localStorage on component mount
+    useEffect(() => {
+        const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
+        const savedPollId = localStorage.getItem(POLL_ID_STORAGE_KEY);
+        
+        if (savedUsername && savedPollId === poll_id) {
+            setUsername(savedUsername);
+            setShowUsernameModal(false);
+        } else {
+            setShowUsernameModal(true);
+            setUsername('');
+        }
+    }, [poll_id]);
+
+    const handleUsernameSubmit = (e) => {
+        e.preventDefault();
+        if (username.trim()) {
+            localStorage.setItem(USERNAME_STORAGE_KEY, username.trim());
+            localStorage.setItem(POLL_ID_STORAGE_KEY, poll_id);
+            setShowUsernameModal(false);
+        }
+    };
 
     const fetchPollData = async () => {
         try {
@@ -84,13 +176,6 @@ const VotePoll = () => {
         return () => clearInterval(pollInterval);
     }, [poll_id]);
 
-    const handleUsernameSubmit = (e) => {
-        e.preventDefault();
-        if (username.trim()) {
-            setShowUsernameModal(false);
-        }
-    };
-
     const handleOptionChange = (index, value) => {
         if (pollData.metadata.multi_selection === "1") {
             setSelectedOptions(prev => ({
@@ -104,11 +189,8 @@ const VotePoll = () => {
         }
         if (submitStatus === 'submitted') {
             setSubmitStatus('idle');
-            setShowUsernameModal(true); // Show username modal when changing options after submission
-            setUsername(""); // Reset username
         }
     };
-
     const hasChangedSelection = () => {
         const selectedIndices = Object.keys(selectedOptions).filter(key => selectedOptions[key]);
         const lastSubmittedIndices = Object.keys(lastSubmittedOptions).filter(key => lastSubmittedOptions[key]);
@@ -181,210 +263,222 @@ const VotePoll = () => {
         return canSubmit ? 'Submit Vote' : 'Select an option';
     };
 
-    const getSubmitButtonStyles = () => {
-        const hasSelection = Object.values(selectedOptions).some(value => value);
-        const canSubmit = hasSelection && (submitStatus !== 'submitted' || hasChangedSelection());
+    const submitButtonClasses = `
+        px-8 py-3 rounded-2xl 
+        relative overflow-hidden
+        bg-gradient-to-r from-gray-50 to-gray-100
+        dark:from-gray-800 dark:to-gray-750
+        font-medium
+        border-2
+        text-sky-500 dark:text-sky-400
+        border-sky-500/30 dark:border-sky-400/30
+        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(14,165,233,0.2)]
+        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(56,189,248,0.2)]
+        before:absolute before:inset-0
+        before:bg-gradient-to-r
+        before:from-sky-500/0 before:via-sky-500/10 before:to-sky-500/0
+        before:translate-x-[-200%]
+        hover:before:translate-x-[200%]
+        before:transition-transform before:duration-1000
+        hover:border-sky-500/50 dark:hover:border-sky-400/50
+        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(14,165,233,0.3)]
+        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(56,189,248,0.3)]
+        transition-all duration-300 ease-in-out
+        w-full mt-6
+    `;
 
-        const baseStyles = "mt-4 flex items-center justify-center py-2 px-4 rounded transition duration-300 ";
+    const textareaClasses = `
+    block px-2.5 pb-2.5 pt-6 w-full 
+    text-base font-medium
+    text-gray-900 dark:text-white 
+    bg-gray-100 dark:bg-gray-600 
+    border-0 border-b-2 border-gray-300 dark:border-gray-500
+    rounded-t-lg 
+    appearance-none 
+    focus:outline-none 
+    focus:border-red-500 dark:focus:border-red-400 
+    focus:bg-gray-50 dark:focus:bg-gray-700
+    hover:border-red-500 dark:hover:border-red-400 
+    hover:bg-gray-50 dark:hover:bg-gray-700
+    hover:text-lg
+    focus:text-lg
+    not-placeholder-shown:bg-gray-50 dark:not-placeholder-shown:bg-gray-700
+    not-placeholder-shown:border-red-500 dark:not-placeholder-shown:border-red-400
+    peer 
+    transition-all duration-300
+    resize-none
+`;
 
-        if (!hasSelection) {
-            return baseStyles + "bg-gray-400 cursor-not-allowed text-white opacity-50";
+const descriptionLabelClasses = `
+    absolute text-xs
+    text-red-500 dark:text-red-400 
+    duration-300 transform 
+    top-2 left-2.5
+    z-10 origin-[0] 
+    bg-transparent
+    px-0
+    font-normal
+    hover:font-medium
+    focus:font-medium
+    peer-hover:font-medium
+    peer-focus:font-medium
+    peer-[&:not(:placeholder-shown)]:font-medium
+    peer-hover:top-1
+    peer-focus:top-1
+    peer-[&:not(:placeholder-shown)]:top-1
+    transition-all duration-300
+`;
+
+const optionCardClasses = (index) => `
+    relative overflow-hidden
+    w-full cursor-pointer 
+    rounded-2xl
+    bg-gradient-to-r from-gray-50 to-gray-100
+    dark:from-gray-800 dark:to-gray-750
+    border-2
+    transition-all duration-300 ease-in-out
+    ${
+        selectedOptions[index] || hoveredOption === index
+            ? `
+                text-zinc-700 dark:text-zinc-300
+                border-zinc-500/50 dark:border-zinc-400/50
+                shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
+                dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
+                scale-[1.02]
+            `
+            : `
+                text-zinc-600 dark:text-zinc-400
+                border-zinc-500/30 dark:border-zinc-400/30
+                shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
+                dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
+                scale-100
+            `
+    }
+`;
+
+const renderResults = () => {
+    const { description, options } = pollData.metadata;
+    const counts = pollData.counts || {};
+    const allCounts = { ...counts };
+
+    // Ensure all options have a corresponding count, even if it's 0
+    options.forEach(option => {
+        if (!(option in allCounts)) {
+            allCounts[option] = 0;
         }
+    });
 
-        if (submitStatus === 'submitted' && !hasChangedSelection()) {
-            return baseStyles + "bg-green-600 text-white cursor-default hover:bg-green-700";
-        }
+    // Calculate total votes
+    const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
 
-        if (submitStatus === 'submitting') {
-            return baseStyles + "bg-[#910d22] text-white cursor-wait opacity-75";
-        }
+    // Prepare chart data
+    const pieData = options.map((option) => ({
+        id: option,
+        label: option,
+        value: Number(counts[option] || 0)
+    }));
+    console.log(pieData)
 
-        return baseStyles + "bg-[#910d22] text-white hover:bg-[#b5162b]";
-    };
-
-    const renderResults = () => {
-        const { description, options } = pollData.metadata;
-        const counts = pollData.counts || {};
-
-        const allCounts = { ...counts };
-        options.forEach(option => {
-            if (!(option in allCounts)) {
-                allCounts[option] = 0;
-            }
-        });
-
-        const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
-        const voteCounts = options.map(option => Number(allCounts[option] || 0));
-        const backgroundColors = generateColors(options.length);
-
-        const chartData = {
-            labels: options,
-            datasets: [
-                {
-                    data: voteCounts,
-                    backgroundColor: backgroundColors,
-                    borderColor: backgroundColors.map(color => color.replace('60%', '50%')),
-                    borderWidth: 1,
-                    hoverBackgroundColor: backgroundColors.map(color => color.replace('60%', '70%')),
-                }
-            ]
-        };
-
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        font: {
-                            size: 14
-                        }
-                    }
-                },
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value, ctx) => {
-                        if (totalVotes === 0) return '0%';
-                        const percentage = ((value / totalVotes) * 100).toFixed(1);
-                        return `${percentage}%`;
-                    },
-                    font: {
-                        weight: 'bold',
-                        size: 14
-                    },
-                    display: (context) => context.dataset.data[context.dataIndex] > 0
-                },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => {
-                            const value = context.raw;
-                            if (totalVotes === 0) return `${context.label}: 0 votes (0%)`;
-                            const percentage = ((value / totalVotes) * 100).toFixed(1);
-                            return `${context.label}: ${value} votes (${percentage}%)`;
-                        }
-                    }
-                }
-            }
-        };
-
-        return (
-            <div className="poll-container bg-gray-200 p-10 rounded-lg shadow-lg transition-transform duration-300 transform hover:scale-105 max-w-2xl w-full md:max-w-3xl">
-                <h2 className="text-2xl font-bold mb-4 text-[#910d22]">Poll Results</h2>
-                <p className="text-lg mb-6 text-gray-700">
-                    <strong>Description:</strong> {description}
-                </p>
-                <div className="w-full h-96 mb-6">
-                    <Pie data={chartData} options={chartOptions} />
+    return (
+            <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Poll Results</h2>
+                <div className="relative mb-6">
+                    <textarea
+                        value={description}
+                        readOnly
+                        placeholder=" "
+                        className={textareaClasses}
+                        rows="3"
+                    />
+                    <label className={descriptionLabelClasses}>
+                        Description/Question
+                    </label>
                 </div>
-                <p className="text-center text-gray-600 mt-4">
-                    Total votes: {totalVotes}
-                </p>
+    
+            <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+                {totalVotes > 0 ? (
+                    <CustomPieChart series={[{ data: pieData,
+                        highlightScope: { fade: 'global', highlight: 'item' },
+                            faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
+                     }]} />
+                ) : (
+                    <div className="flex items-center justify-center h-[300px] text-gray-500">
+                        No votes yet
+                    </div>
+                )}
             </div>
-        );
+        </div>
+    );
     };
 
     if (isPending) return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-800">
-            <div className="bg-gray-200 p-6 rounded-lg shadow-lg">
-                <p className="text-lg">Loading poll data...</p>
-            </div>
+        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
+            <p className="text-gray-900 dark:text-white">Loading poll data...</p>
         </div>
     );
 
     if (error) return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-800">
-            <div className="bg-gray-200 p-6 rounded-lg shadow-lg">
-                <p className="text-lg text-red-600">Error: {error}</p>
-            </div>
+        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
+            <p className="text-red-500 dark:text-red-400">Error: {error}</p>
         </div>
     );
 
-    if (!pollData?.metadata) return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-800">
-            <div className="bg-gray-200 p-6 rounded-lg shadow-lg">
-                <p className="text-lg">No poll data available.</p>
-            </div>
-        </div>
-    );
-
-    if (revealed || pollData.metadata.revealed === "1") {
+    if (revealed || pollData?.metadata?.revealed === "1") {
         return (
-            <div className="flex justify-center items-center min-h-screen bg-gray-800">
+            <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
                 {renderResults()}
             </div>
         );
     }
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-800">
-            <div className="poll-container bg-gray-200 p-10 rounded-lg shadow-lg transition-transform duration-300 transform hover:scale-105 max-w-2xl w-full md:max-w-3xl">
-                <h2 className="text-2xl font-bold mb-4 text-[#910d22]">{pollData.metadata.description}</h2>
+        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
+            <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{pollData?.metadata?.description}</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {pollData.metadata.options.map((option, index) => (
-                        <div key={index} className="option-item text-2xl">
-                            {pollData.metadata.multi_selection === "1" ? (
-                                <label className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded">
-                                    <input
-                                        type="checkbox"
-                                        value={option}
-                                        checked={selectedOptions[index] || false}
-                                        onChange={() => handleOptionChange(index, option)}
-                                        className="mr-3 w-5 h-5"
-                                    />
-                                    <span>{option}</span>
-                                </label>
-                            ) : (
-                                <label className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded">
-                                    <input
-                                        type="radio"
-                                        name="quiz-option"
-                                        value={option}
-                                        checked={selectedOptions[index] || false}
-                                        onChange={() => handleOptionChange(index, option)}
-                                        className="mr-3 w-5 h-5"
-                                    />
-                                    <span>{option}</span>
-                                </label>
-                            )}
-                        </div>
-                    ))}
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                        {pollData?.metadata?.options.map((option, index) => (
+                            <div
+                                key={index}
+                                className={optionCardClasses(index)}
+                                onClick={() => handleOptionChange(index, option)}
+                                onMouseEnter={() => setHoveredOption(index)}
+                                onMouseLeave={() => setHoveredOption(null)}
+                            >
+                                <div className="relative z-10 p-4">
+                                    <div className="flex items-center">
+                                        <input
+                                            type={pollData.metadata.multi_selection === "1" ? "checkbox" : "radio"}
+                                            name="poll-option"
+                                            checked={selectedOptions[index] || false}
+                                            onChange={() => {}}
+                                            className="mr-3 w-5 h-5"
+                                        />
+                                        <span className="font-medium">{option}</span>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10" />
+                            </div>
+                        ))}
+                    </div>
 
                     <button
                         type="submit"
                         disabled={submitStatus === 'submitting'}
-                        className={getSubmitButtonStyles()}
+                        className={submitButtonClasses}
                     >
-                        {getSubmitButtonContent()}
+                        <span className="relative z-10">{getSubmitButtonContent()}</span>
                     </button>
                 </form>
             </div>
 
             {showUsernameModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
-                    <div className="bg-white rounded-lg shadow-lg p-8 w-96">
-                        <h3 className="text-xl font-bold mb-4">Enter Your Username</h3>
-                        <form onSubmit={handleUsernameSubmit}>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Your Username"
-                                autoFocus
-                                required
-                            />
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
-                            >
-                                Submit
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                <UsernameModal
+                    username={username}
+                    setUsername={setUsername}
+                    onSubmit={handleUsernameSubmit}
+                />
             )}
         </div>
     );
