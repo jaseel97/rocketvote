@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFetch from "./useFetch";
 import { useTheme } from './ThemeContext';
-import { PlusCircleIcon as PlusCircleOutline, TrashIcon as TrashOutline } from '@heroicons/react/24/outline';
+import { 
+    PlusCircleIcon as PlusCircleOutline, 
+    TrashIcon as TrashOutline,
+    XMarkIcon as XMarkOutline 
+} from '@heroicons/react/24/outline';
 
 const apiDomain = "http://localhost:8080";
 
@@ -14,8 +18,60 @@ const CreatePoll = () => {
     const [multiSelection, setMultiSelection] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [templateTitle, setTemplateTitle] = useState("");
+    const [triggerFetch, setTriggerFetch] = useState(0); // Add a trigger state
     const navigate = useNavigate();
-    const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates`);
+
+    const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates?_${triggerFetch}`);
+
+    const handleSaveTemplate = () => {
+        if (!templateTitle.trim()) {
+            return;
+        }
+
+        fetch(`${apiDomain}/templates`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: templateTitle,
+                description,
+                options,
+                revealed: 0,
+                multi_selection: multiSelection ? 1 : 0,
+            }),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to save template");
+                return res.json();
+            })
+            .then(() => {
+                // Trigger a refetch by updating the trigger state
+                setTriggerFetch(prev => prev + 1);
+            })
+            .catch((err) => console.error("Error:", err));
+    };
+
+    const handleDeleteTemplate = (templateTitle) => {
+        console.log(JSON.stringify({
+            "title": templateTitle
+        }));
+        
+        fetch(`${apiDomain}/templates`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                "title": templateTitle
+            }),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to delete template");
+                if (activeTemplate === templateTitle) {
+                    handleReset();
+                }
+                // Trigger a refetch by updating the trigger state
+                setTriggerFetch(prev => prev + 1);
+            })
+            .catch((err) => console.error("Error:", err));
+    };
 
     const buttonStyle = {
         add: {
@@ -94,31 +150,6 @@ const CreatePoll = () => {
         setActiveTemplate(template.type);
         setMultiSelection(template.multi_selection === 1);
         setTemplateTitle(template.type);
-    };
-
-    const handleSaveTemplate = () => {
-        if (!templateTitle.trim()) {
-            alert("Title cannot be empty.");
-            return;
-        }
-
-        fetch(`${apiDomain}/templates`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                type: templateTitle,
-                description,
-                options,
-                revealed: 0,
-                multi_selection: multiSelection ? 1 : 0,
-            }),
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to save template");
-                return res.json();
-            })
-            .then(() => alert("Template saved successfully."))
-            .catch((err) => console.error("Error:", err));
     };
 
     const filteredTemplates = templates
@@ -229,6 +260,24 @@ const CreatePoll = () => {
 `;
 
 
+    const deleteIconButton = `
+        absolute -top-3 -right-3 z-20 
+        p-1.5 rounded-full
+        bg-gradient-to-r from-white to-red-50
+        dark:from-gray-800 dark:to-red-900/20
+        text-gray-500 dark:text-gray-400
+        border border-red-200/50 dark:border-red-500/20
+        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
+        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
+        hover:text-red-600 dark:hover:text-red-600
+        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9)]
+        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1)]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        disabled:hover:shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
+        dark:disabled:hover:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
+        disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400
+        group transition-all duration-300
+    `;
 
     return (
         <div className="min-h-screen max-h-full w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
@@ -259,52 +308,70 @@ const CreatePoll = () => {
                         {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
                         {isPending && <p className="text-gray-600 dark:text-gray-300">Loading templates...</p>}
                         <div className={`grid gap-4 mt-4 ${filteredTemplates.length > 4 ? "grid-cols-3" : "grid-cols-2"}`}>
-                        {filteredTemplates.map((template) => (
-    <div
-        key={template.type}
-        onClick={() => handleTemplateSelection(template)}
-        className={`relative overflow-hidden
-                   w-full h-20 
-                   cursor-pointer 
-                   text-center 
-                   rounded-2xl
-                   bg-gradient-to-r from-gray-50 to-gray-100
-                   dark:from-gray-800 dark:to-gray-750
-                   border-2
-                   transition-all duration-300 ease-in-out
-                   before:absolute before:inset-0
-                   before:bg-gradient-to-r
-                   before:translate-x-[-200%]
-                   before:transition-transform before:duration-1000
-                   ${
-            activeTemplate === template.type
-                ? `text-zinc-700 dark:text-zinc-300
-                   border-zinc-500/50 dark:border-zinc-400/50
-                   shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
-                   dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
-                   before:from-zinc-500/0 before:via-zinc-500/20 before:to-zinc-500/0
-                   hover:before:translate-x-[200%]
-                   scale-[1.02]`
-                : `text-zinc-600 dark:text-zinc-400
-                   border-zinc-500/30 dark:border-zinc-400/30
-                   shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
-                   dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
-                   before:from-zinc-500/0 before:via-zinc-500/10 before:to-zinc-500/0
-                   hover:before:translate-x-[200%]
-                   hover:border-zinc-500/50 dark:hover:border-zinc-400/50
-                   hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(113,113,122,0.3)]
-                   dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(161,161,170,0.3)]
-                   hover:text-zinc-700 dark:hover:text-zinc-300`
-        }`}
-    >
-        <div className="relative z-10 flex flex-col items-center justify-center h-full">
-            <p className="font-medium tracking-wide">{template.type}</p>
-        </div>
-        
-        {/* Optional shine effect overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10"></div>
-    </div>
-))}
+            {filteredTemplates.map((template) => (
+                <div
+                    key={template.type}
+                    className="group relative"
+                >
+                    {/* Delete Button with updated styling */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTemplate(template.type);
+                        }}
+                        className={deleteIconButton}
+                    >
+                        <XMarkOutline className="w-4 h-4 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
+                    </button>
+
+                    {/* Template Card Content */}
+                    <div 
+                        onClick={() => handleTemplateSelection(template)}
+                        className={`
+                            w-full h-20 
+                            cursor-pointer 
+                            text-center 
+                            rounded-2xl
+                            bg-gradient-to-r from-gray-50 to-gray-100
+                            dark:from-gray-800 dark:to-gray-750
+                            border-2
+                            overflow-hidden
+                            transition-all duration-300 ease-in-out
+                            relative
+                            ${
+                                activeTemplate === template.type
+                                    ? `text-zinc-700 dark:text-zinc-300
+                                       border-zinc-500/50 dark:border-zinc-400/50
+                                       shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
+                                       dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
+                                       scale-[1.02]`
+                                    : `text-zinc-600 dark:text-zinc-400
+                                       border-zinc-500/30 dark:border-zinc-400/30
+                                       shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
+                                       dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
+                                       hover:border-zinc-500/50 dark:hover:border-zinc-400/50
+                                       hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(113,113,122,0.3)]
+                                       dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(161,161,170,0.3)]
+                                       hover:text-zinc-700 dark:hover:text-zinc-300`
+                            }
+                        `}
+                    >
+                        {/* Shine effect */}
+                        <div className="absolute inset-0 
+                                      bg-gradient-to-r from-transparent via-white to-transparent 
+                                      dark:via-white/10
+                                      opacity-0 group-hover:opacity-100
+                                      -translate-x-full group-hover:translate-x-full
+                                      transition-all duration-1000"
+                        ></div>
+
+                        {/* Template Content */}
+                        <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                            <p className="font-medium tracking-wide">{template.type}</p>
+                        </div>
+                    </div>
+                </div>
+            ))}
                         </div>
                     </div>
 
