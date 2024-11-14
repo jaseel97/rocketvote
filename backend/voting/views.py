@@ -133,7 +133,7 @@ def cast_vote(request, poll_id):
             poll_results = get_poll_results(redis_conn, poll_id)
             response = {
                 'metadata': poll,
-                'counts' : poll_results[1]
+                'counts': poll_results[1]
             }
             return JsonResponse(response, status=200)
         else:
@@ -141,26 +141,24 @@ def cast_vote(request, poll_id):
                 'metadata': poll,
             }
             return JsonResponse(response, status=200)
+    
     elif request.method == 'PATCH':
-        try:
-            poll = get_poll(redis_conn, poll_id)
-            if poll is None or poll['revealed'] == '1':
-                return JsonResponse({'error': 'Poll Expired/Ended'}, status=400)
-        except:
-            return JsonResponse({'error':'An unexpected error has occurred'}, status=500)
-
+        poll = get_poll(redis_conn, poll_id)
+        if poll is None or poll['revealed'] == '1':
+            return JsonResponse({'error': 'Poll Expired/Ended'}, status=400)
+        
         try:
             ballot = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-        
-        if poll['multi_selection'] == '0' and len(ballot['votes'])>1:
+
+        if poll['multi_selection'] == '0' and len(ballot.get('votes', [])) > 1:
             return JsonResponse({'error': 'Only one option can be chosen for this poll'}, status=400)
 
-        if not all(field in poll['options'] for field in ballot['votes']):
+        if not all(option in poll['options'] for option in ballot.get('votes', [])):
             return JsonResponse({'error': 'Invalid option'}, status=400)
 
-        if len(ballot['votes']) != len(set(ballot['votes'])):
+        if len(ballot.get('votes', [])) != len(set(ballot['votes'])):
             return JsonResponse({'error': 'Duplicate votes are not allowed'}, status=400)
 
         if 'voter' not in ballot:
@@ -168,7 +166,6 @@ def cast_vote(request, poll_id):
 
         poll_votes_key = f'{poll_id}:votes'
         poll_count_key = f'{poll_id}:count'
-
         voter_name = ballot['voter']
         new_votes = '-:-'.join(ballot['votes'])
 
@@ -180,7 +177,6 @@ def cast_vote(request, poll_id):
                     redis_conn.zincrby(poll_count_key, -1, option)
 
             redis_conn.hset(poll_votes_key, voter_name, new_votes)
-
             for option in ballot['votes']:
                 redis_conn.zincrby(poll_count_key, 1, option)
         except Exception as e:
@@ -192,46 +188,40 @@ def cast_vote(request, poll_id):
 def poll_admin(request, creation_id):
     redis_conn = get_redis_connection()
     if request.method == "GET":
-        poll_id, poll = get_poll_from_creation_id(redis_conn, creation_id)
-        if poll is None:
+        poll_data = get_poll_from_creation_id(redis_conn, creation_id)
+        if poll_data is None:
             return JsonResponse({'error': 'Invalid creation ID'}, status=400)
         
+        poll_id, poll = poll_data
         poll_results = get_poll_results(redis_conn, poll_id)
         
         response = {
             'metadata': poll,
-            'votes' : poll_results[0],
-            'counts' : poll_results[1]
+            'votes': poll_results[0],
+            'counts': poll_results[1]
         }
-        print("Response : ", response)
         return JsonResponse(response, status=200)
+
     elif request.method == "PATCH":
-        poll_id, poll = get_poll_from_creation_id(redis_conn, creation_id)
-        if poll is None:
+        poll_data = get_poll_from_creation_id(redis_conn, creation_id)
+        if poll_data is None:
             return JsonResponse({'error': 'Invalid creation ID'}, status=400)
         
-        poll['revealed'] = 1
+        poll_id, poll = poll_data
+        poll['revealed'] = '1'
         poll_metadata = make_poll_metadata_string(poll)
         poll_metadata_key = f'{poll_id}:metadata'
         
         try:
             redis_conn.set(poll_metadata_key, poll_metadata)
-
-            #schedule auto delete
-            task = delete_poll.apply_async((creation_id,), countdown=delete_seconds)
-            print(f"Scheduled delete task with ID: {task.id}")
-            
-            # send revealed event to participants
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f'poll_{poll_id}',
-                {
-                    'type': 'poll_revealed',
-                }
+                {'type': 'poll_revealed'}
             )
         except Exception as e:
             return JsonResponse({'error': f'Failed to update poll data: {str(e)}'}, status=500)
 
-        return JsonResponse({'message':'Poll results revealed'}, status=200)
+        return JsonResponse({'message': 'Poll results revealed'}, status=200)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)

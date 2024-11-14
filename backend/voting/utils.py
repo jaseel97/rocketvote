@@ -12,8 +12,13 @@ def get_poll(redis_conn, poll_id):
 def get_poll_from_creation_id(redis_conn, creation_id):
     poll_id = redis_conn.get(f'{creation_id}:poll_id')
     if poll_id is None:
-        return None
-    return poll_id.decode('utf-8'), get_poll(redis_conn, poll_id.decode('utf-8'))
+        return None  # Return None if creation ID does not exist
+
+    poll = get_poll(redis_conn, poll_id.decode('utf-8'))
+    if poll is None:
+        return None  # Return None if poll metadata is missing
+
+    return poll_id.decode('utf-8'), poll
 
 def parse_poll_metadata_string(poll_string):
     if not poll_string or not isinstance(poll_string, str):
