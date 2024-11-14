@@ -4,7 +4,7 @@ services:
     ports:
       - "6379:6379"
     env_file:
-      - ./dev.env
+      - ./.env
     networks:
       - rocketvote-network
 
@@ -16,7 +16,7 @@ services:
     ports:
       - "${API_PORT}:${API_PORT}"
     env_file:
-      - ./dev.env
+      - ./.env
     depends_on:
       - redis
     networks:
@@ -32,7 +32,7 @@ services:
       - redis
       - api
     env_file:
-      - ./dev.env
+      - ./.env
     networks:
       - rocketvote-network
   
@@ -42,8 +42,10 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certs:/etc/nginx/certs:ro
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - api
     networks:

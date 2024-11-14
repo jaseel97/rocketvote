@@ -4,4 +4,8 @@ db.sqlite3
 node_modules
 *cpython*
 celerybeat-schedule
-wsclient.py
+wsclient.
+nginx/certs/
+*.crt
+*.key
+.env

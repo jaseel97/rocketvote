@@ -8,7 +8,7 @@ import {
     XMarkIcon as XMarkOutline,
 } from '@heroicons/react/24/outline';
 
-const apiDomain = "http://rocketvote.com/api";
+const apiDomain = "https://rocketvote.com/api";
 
 const CreatePoll = () => {
     const { darkMode } = useTheme();
@@ -106,7 +106,7 @@ const CreatePoll = () => {
             })
             .then((responseData) => {
                 if (responseData.poll_id) {
-                    window.open(`http://rocketvote.com/${responseData.poll_id}`, "_blank");
+                    window.open(`https://rocketvote.com/${responseData.poll_id}`, "_blank");
                 }
                 if (responseData.redirect_url) {
                     navigate(responseData.redirect_url, {
