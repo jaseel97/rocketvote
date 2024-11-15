@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFetch from "./useFetch";
 import { useTheme } from './ThemeContext';
-import { 
-    PlusCircleIcon as PlusCircleOutline, 
+import {
+    PlusCircleIcon as PlusCircleOutline,
     TrashIcon as TrashOutline,
     XMarkIcon as XMarkOutline,
 } from '@heroicons/react/24/outline';
@@ -18,13 +18,39 @@ const CreatePoll = () => {
     const [multiSelection, setMultiSelection] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [templateTitle, setTemplateTitle] = useState("");
-    const [triggerFetch, setTriggerFetch] = useState(0); // Add a trigger state
+    const [triggerFetch, setTriggerFetch] = useState(0);
+    const [validationError, setValidationError] = useState("");
     const navigate = useNavigate();
 
     const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates?_${triggerFetch}`);
 
+    const validateOptions = () => {
+        // Check for empty options
+        const hasEmptyOptions = options.some(option => !option.trim());
+        if (hasEmptyOptions) {
+            setValidationError("All options must contain at least one character.");
+            return false;
+        }
+
+        // Check for duplicate options
+        const normalizedOptions = options.map(opt => opt.trim().toLowerCase());
+        const uniqueOptions = new Set(normalizedOptions);
+        if (uniqueOptions.size !== normalizedOptions.length) {
+            setValidationError("All options must be unique.");
+            return false;
+        }
+
+        setValidationError("");
+        return true;
+    };
+
     const handleSaveTemplate = () => {
         if (!templateTitle.trim()) {
+            setValidationError("Template title is required.");
+            return;
+        }
+
+        if (!validateOptions()) {
             return;
         }
 
@@ -44,49 +70,22 @@ const CreatePoll = () => {
                 return res.json();
             })
             .then(() => {
-                // Trigger a refetch by updating the trigger state
                 setTriggerFetch(prev => prev + 1);
+                setValidationError(""); // Clear any existing validation errors
             })
-            .catch((err) => console.error("Error:", err));
+            .catch((err) => {
+                console.error("Error:", err);
+                setValidationError("Failed to save template. Please try again.");
+            });
     };
-
-    const handleDeleteTemplate = (templateTitle) => {
-        console.log(JSON.stringify({
-            "title": templateTitle
-        }));
-        
-        fetch(`${apiDomain}/templates`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                "title": templateTitle
-            }),
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to delete template");
-                if (activeTemplate === templateTitle) {
-                    handleReset();
-                }
-                // Trigger a refetch by updating the trigger state
-                setTriggerFetch(prev => prev + 1);
-            })
-            .catch((err) => console.error("Error:", err));
-    };
-
-    const buttonStyle = {
-        add: {
-            icon: <PlusCircleOutline className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />,
-            className: "ml-2 p-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 group transition-colors"
-        },
-        delete: {
-            icon: <TrashOutline className="w-6 h-6 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />,
-            className: "ml-2 p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 group transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        }
-    };
-
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!validateOptions()) {
+            return;
+        }
+
         const pollDetails = {
             description,
             type: activeTemplate || "custom",
@@ -113,8 +112,12 @@ const CreatePoll = () => {
                         state: { redirect_url: responseData.redirect_url, poll_id: responseData.poll_id },
                     });
                 }
+                setValidationError(""); // Clear any existing validation errors
             })
-            .catch((err) => console.error("Error:", err));
+            .catch((err) => {
+                console.error("Error:", err);
+                setValidationError("Failed to create poll. Please try again.");
+            });
     };
 
     const handleReset = () => {
@@ -156,8 +159,8 @@ const CreatePoll = () => {
             template.type.toLowerCase().includes(searchTerm.toLowerCase())
         ) : [];
 
-    
-        const inputClasses = `
+
+    const inputClasses = `
         block px-2.5 pb-2.5 pt-4 w-full text-sm 
         text-gray-900 dark:text-white 
         bg-gray-100 dark:bg-gray-600 
@@ -284,7 +287,7 @@ const CreatePoll = () => {
                 <div className="flex flex-col md:flex-row">
                     <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Poll Templates</h2>
-                        
+
                         {/* Search Templates */}
                         <div className="relative">
                             <input
@@ -307,26 +310,26 @@ const CreatePoll = () => {
                         {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
                         {isPending && <p className="text-gray-600 dark:text-gray-300">Loading templates...</p>}
                         <div className={`grid gap-4 mt-4 ${filteredTemplates.length > 4 ? "grid-cols-3" : "grid-cols-2"}`}>
-            {filteredTemplates.map((template) => (
-                <div
-                    key={template.type}
-                    className="group relative"
-                >
-                    {/* Delete Button with updated styling */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTemplate(template.type);
-                        }}
-                        className={deleteIconButton}
-                    >
-                        <XMarkOutline className="w-4 h-4 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
-                    </button>
+                            {filteredTemplates.map((template) => (
+                                <div
+                                    key={template.type}
+                                    className="group relative"
+                                >
+                                    {/* Delete Button with updated styling */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteTemplate(template.type);
+                                        }}
+                                        className={deleteIconButton}
+                                    >
+                                        <XMarkOutline className="w-4 h-4 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
+                                    </button>
 
-                    {/* Template Card Content */}
-                    <div 
-                        onClick={() => handleTemplateSelection(template)}
-                        className={`
+                                    {/* Template Card Content */}
+                                    <div
+                                        onClick={() => handleTemplateSelection(template)}
+                                        className={`
                             w-full h-20 
                             cursor-pointer 
                             text-center 
@@ -337,14 +340,13 @@ const CreatePoll = () => {
                             overflow-hidden
                             transition-all duration-300 ease-in-out
                             relative
-                            ${
-                                activeTemplate === template.type
-                                    ? `text-zinc-700 dark:text-zinc-300
+                            ${activeTemplate === template.type
+                                                ? `text-zinc-700 dark:text-zinc-300
                                        border-zinc-500/50 dark:border-zinc-400/50
                                        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
                                        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
                                        scale-[1.02]`
-                                    : `text-zinc-600 dark:text-zinc-400
+                                                : `text-zinc-600 dark:text-zinc-400
                                        border-zinc-500/30 dark:border-zinc-400/30
                                        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
                                        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
@@ -352,30 +354,36 @@ const CreatePoll = () => {
                                        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(113,113,122,0.3)]
                                        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(161,161,170,0.3)]
                                        hover:text-zinc-700 dark:hover:text-zinc-300`
-                            }
+                                            }
                         `}
-                    >
-                        {/* Shine effect */}
-                        <div className="absolute inset-0 
+                                    >
+                                        {/* Shine effect */}
+                                        <div className="absolute inset-0 
                                       bg-gradient-to-r from-transparent via-white to-transparent 
                                       dark:via-white/10
                                       opacity-0 group-hover:opacity-100
                                       -translate-x-full group-hover:translate-x-full
                                       transition-all duration-1000"
-                        ></div>
+                                        ></div>
 
-                        {/* Template Content */}
-                        <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                            <p className="font-medium tracking-wide">{template.type}</p>
-                        </div>
-                    </div>
-                </div>
-            ))}
+                                        {/* Template Content */}
+                                        <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                                            <p className="font-medium tracking-wide">{template.type}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
                     <div className="w-full md:w-1/2">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Create Poll</h2>
+                        {/* Display validation error if present */}
+                        {validationError && (
+                            <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                <p className="text-red-600 dark:text-red-400 text-sm">{validationError}</p>
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit}>
                             {/* Template Title */}
                             <div className="relative mb-6">
@@ -434,19 +442,19 @@ const CreatePoll = () => {
                                         </label>
                                     </div>
                                     <button
-    type="button"
-    className={`${addDeleteButtons}
+                                        type="button"
+                                        className={`${addDeleteButtons}
              from-white to-green-50
              dark:from-gray-800 dark:to-green-900/20
              border-green-200/50 dark:border-green-500/20
              hover:text-green-600 dark:hover:text-green-400`}
-    onClick={() => handleAddOption(index)}
->
-    <PlusCircleOutline className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-</button>
-<button
-    type="button"
-    className={`${addDeleteButtons}
+                                        onClick={() => handleAddOption(index)}
+                                    >
+                                        <PlusCircleOutline className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`${addDeleteButtons}
              from-white to-red-50
              dark:from-gray-800 dark:to-red-900/20
              border-red-200/50 dark:border-red-500/20
@@ -455,11 +463,11 @@ const CreatePoll = () => {
              disabled:hover:shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
              dark:disabled:hover:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
              disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400`}
-    onClick={() => handleDeleteOption(index)}
-    disabled={options.length === 1}
->
-    <TrashOutline className="w-6 h-6 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
-</button>
+                                        onClick={() => handleDeleteOption(index)}
+                                        disabled={options.length === 1}
+                                    >
+                                        <TrashOutline className="w-6 h-6 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
+                                    </button>
                                 </div>
                             ))}
 
@@ -469,18 +477,18 @@ const CreatePoll = () => {
                                             text-gray-900 dark:text-white 
                                             bg-gray-100 dark:bg-gray-600 
                                             border-0 border-b-2 
-                                            ${multiSelection 
-                                            ? "border-red-500 dark:border-red-400" 
-                                            : "border-gray-300 dark:border-gray-500"}
+                                            ${multiSelection
+                                        ? "border-red-500 dark:border-red-400"
+                                        : "border-gray-300 dark:border-gray-500"}
                                             rounded-t-lg 
                                             hover:border-red-500 dark:hover:border-red-400 
                                             hover:bg-gray-50 dark:hover:bg-gray-700
                                             transition-all duration-300
                                             group`}>
                                     <div className="flex items-center">
-                                        <input 
-                                            id="multi-selection-checkbox" 
-                                            type="checkbox" 
+                                        <input
+                                            id="multi-selection-checkbox"
+                                            type="checkbox"
                                             checked={multiSelection}
                                             onChange={(e) => setMultiSelection(e.target.checked)}
                                             onBlur={(e) => e.target.parentElement.parentElement.classList.remove('focused')}
@@ -493,12 +501,12 @@ const CreatePoll = () => {
                                                     focus:ring-offset-gray-50 dark:focus:ring-offset-gray-700
                                                     transition-colors duration-300"
                                         />
-                                        <label 
+                                        <label
                                             htmlFor="multi-selection-checkbox"
                                             className={`w-full ms-2 text-sm font-medium 
                                                     cursor-pointer
-                                                    ${multiSelection 
-                                                    ? "text-red-500 dark:text-red-400" 
+                                                    ${multiSelection
+                                                    ? "text-red-500 dark:text-red-400"
                                                     : "text-gray-900 dark:text-white"}
                                                     group-hover:text-red-500 dark:group-hover:text-red-400
                                                     transition-colors duration-300`}
@@ -521,10 +529,10 @@ const CreatePoll = () => {
 
                             {/* Buttons */}
                             <div className="mt-6 flex gap-4">
-{/* Create Poll - Green Theme */}
-<button 
-    type="submit" 
-    className={`${endButtons}
+                                {/* Create Poll - Green Theme */}
+                                <button
+                                    type="submit"
+                                    className={`${endButtons}
              text-green-500 dark:text-green-400
              border-green-500/30 dark:border-green-400/30
              shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(34,197,94,0.2)]
@@ -533,16 +541,16 @@ const CreatePoll = () => {
              hover:border-green-500/50 dark:hover:border-green-400/50
              hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(34,197,94,0.3)]
              dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(74,222,128,0.3)]`}
->
-    <span className="relative z-10">
-        Create Poll
-    </span>
-</button>
+                                >
+                                    <span className="relative z-10">
+                                        Create Poll
+                                    </span>
+                                </button>
 
-<button 
-    type="button"
-    onClick={handleReset}
-    className={`${endButtons}
+                                <button
+                                    type="button"
+                                    onClick={handleReset}
+                                    className={`${endButtons}
              text-red-500 dark:text-red-400
              border-red-500/30 dark:border-red-400/30
              shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(239,68,68,0.2)]
@@ -551,16 +559,16 @@ const CreatePoll = () => {
              hover:border-red-500/50 dark:hover:border-red-400/50
              hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(239,68,68,0.3)]
              dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(248,113,113,0.3)]`}
->
-    <span className="relative z-10">
-        Reset
-    </span>
-</button>
+                                >
+                                    <span className="relative z-10">
+                                        Reset
+                                    </span>
+                                </button>
 
-<button 
-    type="button"
-    onClick={handleSaveTemplate}
-    className={`${endButtons}
+                                <button
+                                    type="button"
+                                    onClick={handleSaveTemplate}
+                                    className={`${endButtons}
              text-sky-500 dark:text-sky-400
              border-sky-500/30 dark:border-sky-400/30
              shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(14,165,233,0.2)]
@@ -569,9 +577,9 @@ const CreatePoll = () => {
              hover:border-sky-500/50 dark:hover:border-sky-400/50
              hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(14,165,233,0.3)]
              dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(56,189,248,0.3)]`}
->
-    <span className="relative z-10">Save Template</span>
-</button>
+                                >
+                                    <span className="relative z-10">Save Template</span>
+                                </button>
                             </div>
                         </form>
                     </div>
