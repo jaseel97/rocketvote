@@ -14,8 +14,8 @@ const PollAdmin = () => {
     const [copySuccess, setCopySuccess] = useState(false);
     const [hoveredOption, setHoveredOption] = useState(null);
     
-    // const apiDomain = "http://rocketvote.com/api";
-    const apiDomain = "http://localhost:8080";
+    const apiDomain = "http://rocketvote.com/api";
+    // const apiDomain = "http://localhost:8080";
 
     
 

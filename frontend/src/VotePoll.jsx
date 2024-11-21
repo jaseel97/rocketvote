@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import CustomPieChart from './PieChart';
 
-// const apiDomain = "http://rocketvote.com/api";
-const apiDomain = "http://localhost:8080";
-// const wsBaseUrl = "ws://rocketvote.com/ws";
-const host = 'localhost:8080';
-const wsBaseUrl = `ws://${host}/ws`;
+const apiDomain = "http://rocketvote.com/api";
+// const apiDomain = "http://localhost:8080";
+const wsBaseUrl = "ws://rocketvote.com/ws";
+// const host = 'localhost:8080';
+// const wsBaseUrl = `ws://${host}/ws`;
 const USERNAME_STORAGE_KEY = 'poll_username';
 const POLL_ID_STORAGE_KEY = 'last_poll_id';
 
