@@ -8,7 +8,8 @@ import {
     XMarkIcon as XMarkOutline,
 } from '@heroicons/react/24/outline';
 
-const apiDomain = "http://rocketvote.com/api";
+// const apiDomain = "http://rocketvote.com/api";
+const apiDomain = "http://localhost:8080";
 
 const CreatePoll = () => {
     const { darkMode } = useTheme();
@@ -79,6 +80,41 @@ const CreatePoll = () => {
             });
     };
 
+    const handleDeleteTemplate = (templateTitle) => {
+        console.log(JSON.stringify({
+            "title": templateTitle
+        }));
+        
+        fetch(`${apiDomain}/templates`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                "title": templateTitle
+            }),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to delete template");
+                if (activeTemplate === templateTitle) {
+                    handleReset();
+                }
+                // Trigger a refetch by updating the trigger state
+                setTriggerFetch(prev => prev + 1);
+            })
+            .catch((err) => console.error("Error:", err));
+    };
+
+    const buttonStyle = {
+        add: {
+            icon: <PlusCircleOutline className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />,
+            className: "ml-2 p-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 group transition-colors"
+        },
+        delete: {
+            icon: <TrashOutline className="w-6 h-6 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />,
+            className: "ml-2 p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 group transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        }
+    };
+
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -105,7 +141,8 @@ const CreatePoll = () => {
             })
             .then((responseData) => {
                 if (responseData.poll_id) {
-                    window.open(`http://rocketvote.com/${responseData.poll_id}`, "_blank");
+                    // window.open(`http://rocketvote.com/${responseData.poll_id}`, "_blank");
+                    window.open(`http://localhost:5173/${responseData.poll_id}`, "_blank");
                 }
                 if (responseData.redirect_url) {
                     navigate(responseData.redirect_url, {
@@ -282,8 +319,8 @@ const CreatePoll = () => {
     `;
 
     return (
-        <div className="min-h-screen max-h-full w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
+        <div className="min-h-screen max-h-full w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-4">
+            <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
                 <div className="flex flex-col md:flex-row">
                     <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Poll Templates</h2>
@@ -309,7 +346,7 @@ const CreatePoll = () => {
                         {/* Templates Grid */}
                         {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
                         {isPending && <p className="text-gray-600 dark:text-gray-300">Loading templates...</p>}
-                        <div className={`grid gap-4 mt-4 ${filteredTemplates.length > 4 ? "grid-cols-3" : "grid-cols-2"}`}>
+                        <div className="grid gap-4 mt-4 grid-cols-3">
                             {filteredTemplates.map((template) => (
                                 <div
                                     key={template.type}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import CustomPieChart from './CustomPieChart';
+import CustomPieChart from './PieChart';
 
 const PollAdmin = () => {
     const location = useLocation();
@@ -14,7 +14,8 @@ const PollAdmin = () => {
     const [copySuccess, setCopySuccess] = useState(false);
     const [hoveredOption, setHoveredOption] = useState(null);
     
-    const apiDomain = "http://rocketvote.com/api";
+    // const apiDomain = "http://rocketvote.com/api";
+    const apiDomain = "http://localhost:8080";
 
     
 
@@ -193,9 +194,9 @@ const PollAdmin = () => {
     `;
 
     return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Poll Results</h2>
+        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-4">
+            <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
+                <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-6">Voting Dashboard</h2>
 
                 <div className="mb-6">
                     <div className="flex gap-4">
@@ -242,124 +243,140 @@ const PollAdmin = () => {
                         Description/Question
                     </label>
                 </div>
-                <div className="flex flex-col md:flex-row">
-                    <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Options and Votes</h3>
-                        
-                        <div className={`grid gap-4 ${options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
-                            {options.map((option, index) => (
-                                <div
-                                    key={index}
-                                    onClick={() => setSelectedOption(selectedOption === option ? null : option)}
-                                    onMouseEnter={() => setHoveredOption(option)}
-                                    onMouseLeave={() => setHoveredOption(null)}
-                                    className={`
-                                        relative overflow-hidden
-                                        w-full cursor-pointer 
-                                        rounded-2xl
-                                        bg-gradient-to-r from-gray-50 to-gray-100
-                                        dark:from-gray-800 dark:to-gray-750
-                                        border-2
-                                        transition-all duration-300 ease-in-out
-                                        ${
-                                            selectedOption === option || hoveredOption === option
-                                                ? `
-                                                    text-zinc-700 dark:text-zinc-300
-                                                    border-zinc-500/50 dark:border-zinc-400/50
-                                                    shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
-                                                    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
-                                                    scale-[1.02]
-                                                    `
-                                                : `
-                                                    text-zinc-600 dark:text-zinc-400
-                                                    border-zinc-500/30 dark:border-zinc-400/30
-                                                    shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
-                                                    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
-                                                    scale-100
-                                                    `
-                                        }
-                                    `}
-                                >
-                                    <div className="relative z-10 p-4">
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-medium text-left transition-all duration-300 ease-in-out">
-                                                {option}
-                                            </span>
-                                            <span className="font-medium transition-all duration-300 ease-in-out">
-                                                {counts[option] || 0} votes
-                                            </span>
-                                        </div>
-                                        
-                                        <div className={`
-                                            mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700
-                                            transition-all duration-300 ease-in-out
-                                            ${(selectedOption === option || hoveredOption === option)
-                                                ? 'opacity-100 max-h-20'
-                                                : 'opacity-0 max-h-0 overflow-hidden'
-                                            }
-                                        `}>
-                                            <p className="text-sm text-left">
-                                                Voters: {getVotersForOption(option).join(', ')}
-                                            </p>
-                                        </div>
+                <div className="w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-2  rounded-md">
+    <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-md shadow-md p-8 md:p-12">
+        <div className="block md:flex md:space-x-8">
+            <div className="w-full md:w-1/2 mb-8 md:mb-0">
+                <div className="relative isolate">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                        Participation Analysis
+                    </h3>
+                    
+                    <div className={`grid gap-4 ${options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
+                        {options.map((option, index) => (
+                            <div
+                                key={index}
+                                onClick={() => setSelectedOption(selectedOption === option ? null : option)}
+                                onMouseEnter={() => setHoveredOption(option)}
+                                onMouseLeave={() => setHoveredOption(null)}
+                                className={`
+                                    relative overflow-hidden
+                                    w-full cursor-pointer 
+                                    rounded-2xl
+                                    bg-gradient-to-r from-gray-50 to-gray-100
+                                    dark:from-gray-800 dark:to-gray-750
+                                    border-2
+                                    transition-all duration-300 ease-in-out
+                                    ${
+                                        selectedOption === option || hoveredOption === option
+                                            ? `
+                                                text-zinc-700 dark:text-zinc-300
+                                                border-zinc-500/50 dark:border-zinc-400/50
+                                                shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
+                                                dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
+                                                scale-[1.02]
+                                                `
+                                            : `
+                                                text-zinc-600 dark:text-zinc-400
+                                                border-zinc-500/30 dark:border-zinc-400/30
+                                                shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
+                                                dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
+                                                scale-100
+                                                `
+                                    }
+                                `}
+                            >
+                                <div className="relative z-10 p-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium text-left transition-all duration-300 ease-in-out">
+                                            {option}
+                                        </span>
+                                        <span className="font-medium transition-all duration-300 ease-in-out">
+                                            {counts[option] || 0} votes
+                                        </span>
                                     </div>
                                     
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10 transition-all duration-300 ease-in-out"></div>
+                                    <div className={`
+                                        mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700
+                                        transition-all duration-300 ease-in-out
+                                        ${(selectedOption === option || hoveredOption === option)
+                                            ? 'opacity-100 max-h-20'
+                                            : 'opacity-0 max-h-0 overflow-hidden'
+                                        }
+                                    `}>
+                                        <p className="text-sm text-left">
+                                            Voters: {getVotersForOption(option).join(', ')}
+                                        </p>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-6">
-                            {!isRevealed ? (
-                                <button
-                                    onClick={handleReveal}
-                                    className={`${endButtons}
-                                        text-green-500 dark:text-green-400
-                                        border-green-500/30 dark:border-green-400/30
-                                        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(34,197,94,0.2)]
-                                        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(74,222,128,0.2)]
-                                        before:from-green-500/0 before:via-green-500/10 before:to-green-500/0
-                                        hover:border-green-500/50 dark:hover:border-green-400/50
-                                        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(34,197,94,0.3)]
-                                        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(74,222,128,0.3)]`}
-                                >
-                                    <span className="relative z-10">Reveal Poll Results</span>
-                                </button>
-                            ) : (
-                                <button
-                                    disabled
-                                    className={`${endButtons}
-                                        text-gray-400 dark:text-gray-500
-                                        border-gray-300/30 dark:border-gray-600/30
-                                        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
-                                        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
-                                        before:from-gray-400/0 before:via-gray-400/5 before:to-gray-400/0
-                                        cursor-not-allowed`}
-                                >
-                                    <span className="relative z-10">Results Revealed</span>
-                                </button>
-                            )}
-                        </div>
+                                
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10 transition-all duration-300 ease-in-out"></div>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Right side: Pie Chart */}
-                    <div className="w-full md:w-1/2">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                        Results Visualization
-                    </h3>
-                    <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
-                {totalVotes > 0 ? (
-                    <CustomPieChart series={[{ data: chartData, 
-                        highlightScope: { fade: 'global', highlight: 'item' },
-                        faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' }, }]} />
-                ) : (
-                    <div className="flex items-center justify-center h-[300px] text-gray-500">
-                        No votes yet
+                    <div className="mt-6">
+                        {!isRevealed ? (
+                            <button
+                                onClick={handleReveal}
+                                className={`${endButtons}
+                                    text-green-500 dark:text-green-400
+                                    border-green-500/30 dark:border-green-400/30
+                                    shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(34,197,94,0.2)]
+                                    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(74,222,128,0.2)]
+                                    before:from-green-500/0 before:via-green-500/10 before:to-green-500/0
+                                    hover:border-green-500/50 dark:hover:border-green-400/50
+                                    hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(34,197,94,0.3)]
+                                    dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(74,222,128,0.3)]`}
+                            >
+                                <span className="relative z-10">Reveal Poll Results</span>
+                            </button>
+                        ) : (
+                            <button
+                                disabled
+                                className={`${endButtons}
+                                    text-gray-400 dark:text-gray-500
+                                    border-gray-300/30 dark:border-gray-600/30
+                                    shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
+                                    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
+                                    before:from-gray-400/0 before:via-gray-400/5 before:to-gray-400/0
+                                    cursor-not-allowed`}
+                            >
+                                <span className="relative z-10">Results Revealed</span>
+                            </button>
+                        )}
                     </div>
-                )}
-            </div>
                 </div>
             </div>
+
+            {/* Right Section - Chart */}
+            <div className="w-full md:w-1/2">
+                <div className="relative isolate">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                        Engagement Chart
+                    </h3>
+                    <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+                        {totalVotes > 0 ? (
+                            <div className="relative isolate">
+                                <CustomPieChart 
+                                    series={[{ 
+                                        data: chartData, 
+                                        highlightScope: { fade: 'global', highlight: 'item' },
+                                        faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' }, 
+                                    }]} 
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-[300px] text-gray-500">
+                                No votes yet
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
         </div>
     );
