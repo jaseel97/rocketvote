@@ -9,26 +9,21 @@ const COLORS = [
 
 const RADIAN = Math.PI / 180;
 
-// Custom label component for the pie segments
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value, label, index, data }) => {
-    // Only show label if it takes up more than 5% of the pie
-    if (percent < 0.05)
-        return null;
+    // if (percent < 0.05)
+    //     return null;
 
     const radius = outerRadius * 1.15;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    // Determine if we should show the full label or just percentage based on number of items
     const showFullLabel = data.length <= 8;
     const displayText = showFullLabel
         ? `${label}: ${(percent * 100).toFixed(1)}%`
         : `${(percent * 100).toFixed(1)}%`;
 
-    // Adjust text anchor based on position
     const textAnchor = x > cx ? 'start' : 'end';
 
-    // Get the color for this segment
     const fill = COLORS[index % COLORS.length];
 
     return (
@@ -45,7 +40,6 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     );
 };
 
-// Custom tooltip component
 const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;

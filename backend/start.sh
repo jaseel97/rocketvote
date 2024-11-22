@@ -8,5 +8,5 @@ if [ "$ENV" = "prod" ]; then
     exec gunicorn --workers ${GUNICORN_WORKERS} --bind "0.0.0.0:${API_PORT}" rocketVoteAPI.asgi:application -k uvicorn.workers.UvicornWorker
 else
     echo "Starting development server..."
-    python manage.py runserver 0.0.0.0:8080
+    python manage.py runserver 0.0.0.0:${API_PORT}
 fi

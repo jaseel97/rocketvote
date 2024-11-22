@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-// Create the context
 const ThemeContext = createContext({
     darkMode: false,
     setDarkMode: () => { },
 });
 
-// Custom hook for using theme
 const useTheme = () => {
     const context = useContext(ThemeContext);
     if (!context) {
@@ -15,7 +13,6 @@ const useTheme = () => {
     return context;
 };
 
-// Theme Provider component
 const ThemeProvider = ({ children }) => {
     const [darkMode, setDarkMode] = useState(() => {
         // Check localStorage first, then system preference
@@ -27,7 +24,6 @@ const ThemeProvider = ({ children }) => {
     });
 
     useEffect(() => {
-        // Update localStorage and document class when theme changes
         localStorage.setItem('darkMode', JSON.stringify(darkMode));
         if (darkMode) {
             document.documentElement.classList.add('dark');
@@ -48,5 +44,4 @@ const ThemeProvider = ({ children }) => {
     );
 };
 
-// Export everything we need
 export { ThemeProvider, useTheme };

@@ -11,3 +11,4 @@ nginx/certs/
 .env
 .vscode
 voting/migrations/*0*.py
+.idea

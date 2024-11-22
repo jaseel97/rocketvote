@@ -130,7 +130,6 @@ const VotePoll = () => {
     const [hoveredOption, setHoveredOption] = useState(null);
     const [socket, setSocket] = useState(null);
 
-    // Load username from localStorage on component mount
     useEffect(() => {
         const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
         const savedPollId = localStorage.getItem(POLL_ID_STORAGE_KEY);
@@ -157,7 +156,7 @@ const VotePoll = () => {
             const data = JSON.parse(event.data);
             if (data.results_revealed) {
                 setRevealed(true);
-                fetchPollData(); // Fetch latest data when results are revealed
+                fetchPollData();
             }
         };
 
@@ -390,80 +389,21 @@ const VotePoll = () => {
         }
 `;
 
-    // const renderResults = () => {
-    //     const { description, options } = pollData.metadata;
-    //     const counts = pollData.counts || {};
-    //     const allCounts = { ...counts };
-
-    //     // Ensure all options have a corresponding count, even if it's 0
-    //     options.forEach(option => {
-    //         if (!(option in allCounts)) {
-    //             allCounts[option] = 0;
-    //         }
-    //     });
-
-    //     // Calculate total votes
-    //     const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
-
-    //     // Prepare chart data
-    //     const pieData = options.map((option) => ({
-    //         id: option,
-    //         label: option,
-    //         value: Number(counts[option] || 0)
-    //     }));
-    //     console.log(pieData)
-
-    //     return (
-    //         <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
-    //             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Poll Results</h2>
-    //             <div className="relative mb-6">
-    //                 <textarea
-    //                     value={description}
-    //                     readOnly
-    //                     placeholder=" "
-    //                     className={textareaClasses}
-    //                     rows="3"
-    //                 />
-    //                 <label className={descriptionLabelClasses}>
-    //                     Description/Question
-    //                 </label>
-    //             </div>
-
-    //             <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
-    //                 {totalVotes > 0 ? (
-    //                     <CustomPieChart series={[{
-    //                         data: pieData,
-    //                         highlightScope: { fade: 'global', highlight: 'item' },
-    //                         faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
-    //                     }]} />
-    //                 ) : (
-    //                     <div className="flex items-center justify-center h-[300px] text-gray-500">
-    //                         No votes yet
-    //                     </div>
-    //                 )}
-    //             </div>
-    //         </div>
-    //     );
-    // };
     const renderResults = () => {
         const { description, options } = pollData.metadata;
         const counts = pollData.counts || {};
         const allCounts = { ...counts };
     
-        // Ensure all options have a corresponding count, even if it's 0
         options.forEach(option => {
             if (!(option in allCounts)) {
                 allCounts[option] = 0;
             }
         });
     
-        // Calculate total votes
         const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
     
-        // Get user's last votes
         const userVotes = options.filter((option, index) => lastSubmittedOptions[index]);
     
-        // Prepare chart data
         const pieData = options.map((option) => ({
             id: option,
             label: option,

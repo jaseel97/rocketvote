@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const AnimatedPollOptions = ({ options, counts, selectedOption, setSelectedOption, getVotersForOption }) => {
     const [hoveredOption, setHoveredOption] = React.useState(null);
-
-    // Sort options by vote count in descending order
     const sortedOptions = [...options].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
 
     return (

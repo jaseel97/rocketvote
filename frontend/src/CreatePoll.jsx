@@ -29,14 +29,12 @@ const CreatePoll = () => {
     const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates?_${triggerFetch}`);
 
     const validateOptions = () => {
-        // Check for empty options
         const hasEmptyOptions = options.some(option => !option.trim());
         if (hasEmptyOptions) {
             setValidationError("All options must contain at least one character.");
             return false;
         }
 
-        // Check for duplicate options
         const normalizedOptions = options.map(opt => opt.trim().toLowerCase());
         const uniqueOptions = new Set(normalizedOptions);
         if (uniqueOptions.size !== normalizedOptions.length) {
@@ -100,7 +98,7 @@ const CreatePoll = () => {
                 if (activeTemplate === templateTitle) {
                     handleReset();
                 }
-                // Trigger a refetch by updating the trigger state
+
                 setTriggerFetch(prev => prev + 1);
             })
             .catch((err) => console.error("Error:", err));
@@ -151,7 +149,7 @@ const CreatePoll = () => {
                         state: { redirect_url: responseData.redirect_url, poll_id: responseData.poll_id },
                     });
                 }
-                setValidationError(""); // Clear any existing validation errors
+                setValidationError("");
             })
             .catch((err) => {
                 console.error("Error:", err);
@@ -327,7 +325,6 @@ const CreatePoll = () => {
                     <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Poll Templates</h2>
 
-                        {/* Search Templates */}
                         <div className="relative">
                             <input
                                 type="text"
@@ -345,7 +342,6 @@ const CreatePoll = () => {
                             </label>
                         </div>
 
-                        {/* Templates Grid */}
                         {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
                         {isPending && <p className="text-gray-600 dark:text-gray-300">Loading templates...</p>}
                         <div className="grid gap-4 mt-4 grid-cols-3">
@@ -354,7 +350,7 @@ const CreatePoll = () => {
                                     key={template.type}
                                     className="group relative"
                                 >
-                                    {/* Delete Button with updated styling */}
+
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -365,7 +361,6 @@ const CreatePoll = () => {
                                         <XMarkOutline className="w-4 h-4 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
                                     </button>
 
-                                    {/* Template Card Content */}
                                     <div
                                         onClick={() => handleTemplateSelection(template)}
                                         className={`
@@ -396,7 +391,6 @@ const CreatePoll = () => {
                                             }
                         `}
                                     >
-                                        {/* Shine effect */}
                                         <div className="absolute inset-0 
                                       bg-gradient-to-r from-transparent via-white to-transparent 
                                       dark:via-white/10
@@ -405,7 +399,6 @@ const CreatePoll = () => {
                                       transition-all duration-1000"
                                         ></div>
 
-                                        {/* Template Content */}
                                         <div className="relative z-10 flex flex-col items-center justify-center h-full">
                                             <p className="font-medium tracking-wide">{template.type}</p>
                                         </div>
@@ -417,7 +410,7 @@ const CreatePoll = () => {
 
                     <div className="w-full md:w-1/2">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Create Poll</h2>
-                        {/* Display validation error if present */}
+
                         {validationError && (
                             <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                                 <p className="text-red-600 dark:text-red-400 text-sm">{validationError}</p>
@@ -442,7 +435,6 @@ const CreatePoll = () => {
                                 </label>
                             </div>
 
-                            {/* Description/Question */}
                             <div className="relative mb-6">
                                 <textarea
                                     required
@@ -461,7 +453,6 @@ const CreatePoll = () => {
                                 </label>
                             </div>
 
-                            {/* Options */}
                             <label className="block font-semibold mb-4 text-gray-900 dark:text-white">Options</label>
                             {options.map((option, index) => (
                                 <div key={index} className="flex items-center mb-4">
@@ -510,7 +501,6 @@ const CreatePoll = () => {
                                 </div>
                             ))}
 
-                            {/* Multiple Selection Checkbox - Kept as is */}
                             <div className="relative mb-6 mt-6">
                                 <div className={`block px-2.5 pb-2.5 pt-4 w-full text-sm 
                                             text-gray-900 dark:text-white 
@@ -566,9 +556,7 @@ const CreatePoll = () => {
                                 `}</style>
                             </div>
 
-                            {/* Buttons */}
                             <div className="mt-6 flex gap-4">
-                                {/* Create Poll - Green Theme */}
                                 <button
                                     type="submit"
                                     className={`${endButtons}
