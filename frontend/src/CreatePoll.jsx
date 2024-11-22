@@ -8,8 +8,11 @@ import {
     XMarkIcon as XMarkOutline,
 } from '@heroicons/react/24/outline';
 
-const apiDomain = "http://rocketvote.com/api";
-// const apiDomain = "http://localhost:8080";
+import {
+    appDomain,
+    apiDomain,
+    wsDomain
+} from "./Config"
 
 const CreatePoll = () => {
     const { darkMode } = useTheme();
@@ -84,7 +87,7 @@ const CreatePoll = () => {
         console.log(JSON.stringify({
             "title": templateTitle
         }));
-        
+
         fetch(`${apiDomain}/templates`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
@@ -141,8 +144,7 @@ const CreatePoll = () => {
             })
             .then((responseData) => {
                 if (responseData.poll_id) {
-                    window.open(`http://rocketvote.com/${responseData.poll_id}`, "_blank");
-                    // window.open(`http://localhost:5173/${responseData.poll_id}`, "_blank");
+                    window.open(`${appDomain}/${responseData.poll_id}`, "_blank");
                 }
                 if (responseData.redirect_url) {
                     navigate(responseData.redirect_url, {

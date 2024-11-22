@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 // Create the context
 const ThemeContext = createContext({
     darkMode: false,
-    setDarkMode: () => {},
+    setDarkMode: () => { },
 });
 
 // Custom hook for using theme

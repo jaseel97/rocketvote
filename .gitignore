@@ -9,3 +9,5 @@ nginx/certs/
 *.crt
 *.key
 .env
+.vscode
+voting/migrations/*0*.py

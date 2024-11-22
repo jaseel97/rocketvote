@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import CustomPieChart from './PieChart';
 
-const apiDomain = "http://rocketvote.com/api";
-// const apiDomain = "http://localhost:8080";
-const wsBaseUrl = "ws://rocketvote.com/ws";
-// const host = 'localhost:8080';
-// const wsBaseUrl = `ws://${host}/ws`;
+import {
+    appDomain,
+    apiDomain,
+    wsDomain
+} from "./Config"
+
 const USERNAME_STORAGE_KEY = 'poll_username';
 const POLL_ID_STORAGE_KEY = 'last_poll_id';
 
@@ -85,36 +86,36 @@ const UsernameModal = ({ username, setUsername, onSubmit }) => {
         peer-[&:not(:placeholder-shown)]:font-medium
         left-1
     `;
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-                <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm" />
-                <div className="relative z-50 bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-lg p-8 w-96 max-w-[90%]">
-                    <form onSubmit={onSubmit}>
-                        <div className="relative mb-6">
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className={modalInputClasses}
-                                placeholder=" "
-                                required
-                            />
-                            <label className={modalLabelClasses}>
-                                Enter username to continue
-                            </label>
-                        </div>
-                        <button 
-                            type="submit"
-                            className={modalSubmitButtonClasses}
-                            disabled={!username.trim()}
-                        >
-                            <span className="relative z-10">Continue</span>
-                        </button>
-                    </form>
-                </div>
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm" />
+            <div className="relative z-50 bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-lg p-8 w-96 max-w-[90%]">
+                <form onSubmit={onSubmit}>
+                    <div className="relative mb-6">
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className={modalInputClasses}
+                            placeholder=" "
+                            required
+                        />
+                        <label className={modalLabelClasses}>
+                            Enter username to continue
+                        </label>
+                    </div>
+                    <button
+                        type="submit"
+                        className={modalSubmitButtonClasses}
+                        disabled={!username.trim()}
+                    >
+                        <span className="relative z-10">Continue</span>
+                    </button>
+                </form>
             </div>
-        );
-    };
+        </div>
+    );
+};
 const VotePoll = () => {
     const { poll_id } = useParams();
     const [pollData, setPollData] = useState(null);
@@ -133,7 +134,7 @@ const VotePoll = () => {
     useEffect(() => {
         const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
         const savedPollId = localStorage.getItem(POLL_ID_STORAGE_KEY);
-        
+
         if (savedUsername && savedPollId === poll_id) {
             setUsername(savedUsername);
             setShowUsernameModal(false);
@@ -146,8 +147,8 @@ const VotePoll = () => {
     useEffect(() => {
         if (!poll_id) return;
 
-        const ws = new WebSocket(`${wsBaseUrl}/${poll_id}/`);
-        
+        const ws = new WebSocket(`${wsDomain}/${poll_id}/`);
+
         ws.onopen = () => {
             console.log('WebSocket Connected');
         };
@@ -343,7 +344,7 @@ const VotePoll = () => {
     resize-none
 `;
 
-const descriptionLabelClasses = `
+    const descriptionLabelClasses = `
     absolute text-xs
     text-red-500 dark:text-red-400 
     duration-300 transform 
@@ -363,7 +364,7 @@ const descriptionLabelClasses = `
     transition-all duration-300
 `;
 
-const optionCardClasses = (index) => `
+    const optionCardClasses = (index) => `
     relative overflow-hidden
     w-full cursor-pointer 
     rounded-2xl
@@ -371,8 +372,7 @@ const optionCardClasses = (index) => `
     dark:from-gray-800 dark:to-gray-750
     border-2
     transition-all duration-300 ease-in-out
-    ${
-        selectedOptions[index] || hoveredOption === index
+    ${selectedOptions[index] || hoveredOption === index
             ? `
                 text-zinc-700 dark:text-zinc-300
                 border-zinc-500/50 dark:border-zinc-400/50
@@ -387,35 +387,93 @@ const optionCardClasses = (index) => `
                 dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
                 scale-100
             `
-    }
+        }
 `;
 
-const renderResults = () => {
-    const { description, options } = pollData.metadata;
-    const counts = pollData.counts || {};
-    const allCounts = { ...counts };
+    // const renderResults = () => {
+    //     const { description, options } = pollData.metadata;
+    //     const counts = pollData.counts || {};
+    //     const allCounts = { ...counts };
 
-    // Ensure all options have a corresponding count, even if it's 0
-    options.forEach(option => {
-        if (!(option in allCounts)) {
-            allCounts[option] = 0;
-        }
-    });
+    //     // Ensure all options have a corresponding count, even if it's 0
+    //     options.forEach(option => {
+    //         if (!(option in allCounts)) {
+    //             allCounts[option] = 0;
+    //         }
+    //     });
 
-    // Calculate total votes
-    const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
+    //     // Calculate total votes
+    //     const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
 
-    // Prepare chart data
-    const pieData = options.map((option) => ({
-        id: option,
-        label: option,
-        value: Number(counts[option] || 0)
-    }));
-    console.log(pieData)
+    //     // Prepare chart data
+    //     const pieData = options.map((option) => ({
+    //         id: option,
+    //         label: option,
+    //         value: Number(counts[option] || 0)
+    //     }));
+    //     console.log(pieData)
 
-    return (
+    //     return (
+    //         <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
+    //             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Poll Results</h2>
+    //             <div className="relative mb-6">
+    //                 <textarea
+    //                     value={description}
+    //                     readOnly
+    //                     placeholder=" "
+    //                     className={textareaClasses}
+    //                     rows="3"
+    //                 />
+    //                 <label className={descriptionLabelClasses}>
+    //                     Description/Question
+    //                 </label>
+    //             </div>
+
+    //             <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+    //                 {totalVotes > 0 ? (
+    //                     <CustomPieChart series={[{
+    //                         data: pieData,
+    //                         highlightScope: { fade: 'global', highlight: 'item' },
+    //                         faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
+    //                     }]} />
+    //                 ) : (
+    //                     <div className="flex items-center justify-center h-[300px] text-gray-500">
+    //                         No votes yet
+    //                     </div>
+    //                 )}
+    //             </div>
+    //         </div>
+    //     );
+    // };
+    const renderResults = () => {
+        const { description, options } = pollData.metadata;
+        const counts = pollData.counts || {};
+        const allCounts = { ...counts };
+    
+        // Ensure all options have a corresponding count, even if it's 0
+        options.forEach(option => {
+            if (!(option in allCounts)) {
+                allCounts[option] = 0;
+            }
+        });
+    
+        // Calculate total votes
+        const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
+    
+        // Get user's last votes
+        const userVotes = options.filter((option, index) => lastSubmittedOptions[index]);
+    
+        // Prepare chart data
+        const pieData = options.map((option) => ({
+            id: option,
+            label: option,
+            value: Number(counts[option] || 0)
+        }));
+    
+        return (
             <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Poll Results</h2>
+                
                 <div className="relative mb-6">
                     <textarea
                         value={description}
@@ -429,20 +487,34 @@ const renderResults = () => {
                     </label>
                 </div>
     
-            <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
-                {totalVotes > 0 ? (
-                    <CustomPieChart series={[{ data: pieData,
-                        highlightScope: { fade: 'global', highlight: 'item' },
-                            faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
-                     }]} />
-                ) : (
-                    <div className="flex items-center justify-center h-[300px] text-gray-500">
-                        No votes yet
+                {userVotes.length > 0 && (
+                    <div className="mb-6 p-4 rounded-lg bg-sky-100/50 dark:bg-sky-900/50 border-2 border-sky-500/30 dark:border-sky-400/30">
+                        <h3 className="text-lg font-medium text-sky-700 dark:text-sky-300 mb-2">You voted for:</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                            {userVotes.map((vote, index) => (
+                                <li key={index} className="text-sky-600 dark:text-sky-400">
+                                    {vote}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                 )}
+    
+                <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+                    {totalVotes > 0 ? (
+                        <CustomPieChart series={[{
+                            data: pieData,
+                            highlightScope: { fade: 'global', highlight: 'item' },
+                            faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
+                        }]} />
+                    ) : (
+                        <div className="flex items-center justify-center h-[300px] text-gray-500">
+                            No votes yet
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
-    );
+        );
     };
 
     if (isPending) return (
@@ -486,7 +558,7 @@ const renderResults = () => {
                                             type={pollData.metadata.multi_selection === "1" ? "checkbox" : "radio"}
                                             name="poll-option"
                                             checked={selectedOptions[index] || false}
-                                            onChange={() => {}}
+                                            onChange={() => { }}
                                             className="mr-3 w-5 h-5"
                                         />
                                         <span className="font-medium">{option}</span>

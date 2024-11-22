@@ -9,12 +9,12 @@ const useFetch = (url) => {
         if (!url) {
             setIsPending(false);
             setError('No URL provided');
-            return; 
+            return;
         }
 
         const abortCont = new AbortController();
         setIsPending(true);
-        setError(null);  
+        setError(null);
         fetch(url, { signal: abortCont.signal })
             .then(res => {
                 if (!res.ok) {

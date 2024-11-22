@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import CustomPieChart from './PieChart';
+import AnimatedPollOptions from './AnimatedPollOptions';
+
+import {
+    appDomain,
+    apiDomain,
+    wsDomain
+} from "./Config"
 
 const PollAdmin = () => {
     const location = useLocation();
@@ -13,11 +20,6 @@ const PollAdmin = () => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [copySuccess, setCopySuccess] = useState(false);
     const [hoveredOption, setHoveredOption] = useState(null);
-    
-    const apiDomain = "http://rocketvote.com/api";
-    // const apiDomain = "http://localhost:8080";
-
-    
 
     const fetchPollData = () => {
         if (!redirect_url) {
@@ -25,14 +27,14 @@ const PollAdmin = () => {
             setIsPending(false);
             return;
         }
-        
+
         fetch(`${apiDomain}${redirect_url}`)
             .then(res => {
                 if (!res.ok) throw new Error("Failed to fetch poll data");
                 return res.json();
             })
             .then(data => {
-                setPollData(data); 
+                setPollData(data);
                 setIsPending(false);
                 setError(null);
             })
@@ -50,7 +52,7 @@ const PollAdmin = () => {
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(`https://rocketvote.com/${poll_id}`);
+            await navigator.clipboard.writeText(`${appDomain}/${poll_id}`);
             setCopySuccess(true);
             setTimeout(() => setCopySuccess(false), 2000);
         } catch (err) {
@@ -64,12 +66,12 @@ const PollAdmin = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ revealed: "1" })
         })
-        .then((res) => {
-            if (!res.ok) throw new Error("Failed to reveal poll results");
-            return res.json();
-        })
-        .then(() => setIsRevealed(true))
-        .catch((err) => console.error("Error revealing poll:", err));
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to reveal poll results");
+                return res.json();
+            })
+            .then(() => setIsRevealed(true))
+            .catch((err) => console.error("Error revealing poll:", err));
     };
 
     const getVotersForOption = (option) => {
@@ -99,7 +101,7 @@ const PollAdmin = () => {
 
     const { description, options } = pollData.metadata;
     const counts = pollData.counts || {};
-    
+
     // Calculate total votes
     const totalVotes = options
         .map(option => Number(counts[option] || 0))
@@ -204,7 +206,7 @@ const PollAdmin = () => {
                             <input
                                 type="text"
                                 id="poll-url"
-                                value={`https://rocketvote.com/${poll_id}`}
+                                value={`${appDomain}/${poll_id}`}
                                 readOnly
                                 placeholder=" "
                                 className={inputClasses}
@@ -244,22 +246,22 @@ const PollAdmin = () => {
                     </label>
                 </div>
                 <div className="w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-2  rounded-md">
-    <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-md shadow-md p-8 md:p-12">
-        <div className="block md:flex md:space-x-8">
-            <div className="w-full md:w-1/2 mb-8 md:mb-0">
-                <div className="relative isolate">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                        Participation Analysis
-                    </h3>
-                    
-                    <div className={`grid gap-4 ${options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
-                        {options.map((option, index) => (
-                            <div
-                                key={index}
-                                onClick={() => setSelectedOption(selectedOption === option ? null : option)}
-                                onMouseEnter={() => setHoveredOption(option)}
-                                onMouseLeave={() => setHoveredOption(null)}
-                                className={`
+                    <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-md shadow-md p-8 md:p-12">
+                        <div className="block md:flex md:space-x-8">
+                            <div className="w-full md:w-1/2 mb-8 md:mb-0">
+                                <div className="relative isolate">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                                        Overview
+                                    </h3>
+
+                                    {/* <div className={`grid gap-4 ${options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
+                                        {options.map((option, index) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => setSelectedOption(selectedOption === option ? null : option)}
+                                                onMouseEnter={() => setHoveredOption(option)}
+                                                onMouseLeave={() => setHoveredOption(null)}
+                                                className={`
                                     relative overflow-hidden
                                     w-full cursor-pointer 
                                     rounded-2xl
@@ -267,59 +269,65 @@ const PollAdmin = () => {
                                     dark:from-gray-800 dark:to-gray-750
                                     border-2
                                     transition-all duration-300 ease-in-out
-                                    ${
-                                        selectedOption === option || hoveredOption === option
-                                            ? `
+                                    ${selectedOption === option || hoveredOption === option
+                                                        ? `
                                                 text-zinc-700 dark:text-zinc-300
                                                 border-zinc-500/50 dark:border-zinc-400/50
                                                 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.3)]
                                                 dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.3)]
                                                 scale-[1.02]
                                                 `
-                                            : `
+                                                        : `
                                                 text-zinc-600 dark:text-zinc-400
                                                 border-zinc-500/30 dark:border-zinc-400/30
                                                 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(113,113,122,0.2)]
                                                 dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(161,161,170,0.2)]
                                                 scale-100
                                                 `
-                                    }
+                                                    }
                                 `}
-                            >
-                                <div className="relative z-10 p-4">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium text-left transition-all duration-300 ease-in-out">
-                                            {option}
-                                        </span>
-                                        <span className="font-medium transition-all duration-300 ease-in-out">
-                                            {counts[option] || 0} votes
-                                        </span>
-                                    </div>
-                                    
-                                    <div className={`
+                                            >
+                                                <div className="relative z-10 p-4">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-medium text-left transition-all duration-300 ease-in-out">
+                                                            {option}
+                                                        </span>
+                                                        <span className="font-medium transition-all duration-300 ease-in-out">
+                                                            {counts[option] || 0} {(counts[option] || 0) === 1 ? 'vote' : 'votes'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className={`
                                         mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700
                                         transition-all duration-300 ease-in-out
                                         ${(selectedOption === option || hoveredOption === option)
-                                            ? 'opacity-100 max-h-20'
-                                            : 'opacity-0 max-h-0 overflow-hidden'
-                                        }
+                                                            ? 'opacity-100 max-h-20'
+                                                            : 'opacity-0 max-h-0 overflow-hidden'
+                                                        }
                                     `}>
-                                        <p className="text-sm text-left">
-                                            Voters: {getVotersForOption(option).join(', ')}
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10 transition-all duration-300 ease-in-out"></div>
-                            </div>
-                        ))}
-                    </div>
+                                                        <p className="text-sm text-left max-h-16 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
+                                                            <strong>Chosen by</strong>: {getVotersForOption(option).length > 0 ? getVotersForOption(option).join(', ') : <span className="italic">None</span>}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                    <div className="mt-6">
-                        {!isRevealed ? (
-                            <button
-                                onClick={handleReveal}
-                                className={`${endButtons}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10 transition-all duration-300 ease-in-out"></div>
+                                            </div>
+                                        ))}
+                                    </div> */}
+                                    <AnimatedPollOptions
+                                        options={options}
+                                        counts={counts}
+                                        selectedOption={selectedOption}
+                                        setSelectedOption={setSelectedOption}
+                                        getVotersForOption={getVotersForOption}
+                                    />
+
+                                    <div className="mt-6">
+                                        {!isRevealed ? (
+                                            <button
+                                                onClick={handleReveal}
+                                                className={`${endButtons}
                                     text-green-500 dark:text-green-400
                                     border-green-500/30 dark:border-green-400/30
                                     shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(34,197,94,0.2)]
@@ -328,56 +336,56 @@ const PollAdmin = () => {
                                     hover:border-green-500/50 dark:hover:border-green-400/50
                                     hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(34,197,94,0.3)]
                                     dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(74,222,128,0.3)]`}
-                            >
-                                <span className="relative z-10">Reveal Poll Results</span>
-                            </button>
-                        ) : (
-                            <button
-                                disabled
-                                className={`${endButtons}
+                                            >
+                                                <span className="relative z-10">Reveal Poll Results</span>
+                                            </button>
+                                        ) : (
+                                            <button
+                                                disabled
+                                                className={`${endButtons}
                                     text-gray-400 dark:text-gray-500
                                     border-gray-300/30 dark:border-gray-600/30
                                     shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
                                     dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
                                     before:from-gray-400/0 before:via-gray-400/5 before:to-gray-400/0
                                     cursor-not-allowed`}
-                            >
-                                <span className="relative z-10">Results Revealed</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
+                                            >
+                                                <span className="relative z-10">Results Revealed</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
 
-            {/* Right Section - Chart */}
-            <div className="w-full md:w-1/2">
-                <div className="relative isolate">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                        Engagement Chart
-                    </h3>
-                    <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
-                        {totalVotes > 0 ? (
-                            <div className="relative isolate">
-                                <CustomPieChart 
-                                    series={[{ 
-                                        data: chartData, 
-                                        highlightScope: { fade: 'global', highlight: 'item' },
-                                        faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' }, 
-                                    }]} 
-                                />
+                            {/* Right Section - Chart */}
+                            <div className="w-full md:w-1/2">
+                                <div className="relative isolate">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                                        Visual Breakdown
+                                    </h3>
+                                    <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+                                        {totalVotes > 0 ? (
+                                            <div className="relative isolate">
+                                                <CustomPieChart
+                                                    series={[{
+                                                        data: chartData,
+                                                        highlightScope: { fade: 'global', highlight: 'item' },
+                                                        faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
+                                                    }]}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-center h-[300px] text-gray-500">
+                                                No votes yet
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-[300px] text-gray-500">
-                                No votes yet
-                            </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-        </div>
         </div>
     );
 };

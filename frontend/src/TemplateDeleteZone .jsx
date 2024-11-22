@@ -22,7 +22,7 @@ const TemplateDeleteZone = ({ onDeleteTemplate }) => {
   };
 
   return (
-    <div 
+    <div
       className={`
         fixed left-1/2 bottom-8 -translate-x-1/2
         w-16 h-16 
@@ -40,7 +40,7 @@ const TemplateDeleteZone = ({ onDeleteTemplate }) => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <TrashOutline 
+      <TrashOutline
         className={`
           w-8 h-8
           transition-all duration-300

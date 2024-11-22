@@ -21,7 +21,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 
     // Determine if we should show the full label or just percentage based on number of items
     const showFullLabel = data.length <= 8;
-    const displayText = showFullLabel 
+    const displayText = showFullLabel
         ? `${label}: ${(percent * 100).toFixed(1)}%`
         : `${(percent * 100).toFixed(1)}%`;
 
@@ -32,13 +32,13 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     const fill = COLORS[index % COLORS.length];
 
     return (
-        <text 
-            x={x} 
-            y={y} 
-            fill={fill} 
+        <text
+            x={x}
+            y={y}
+            fill={fill}
             textAnchor={textAnchor}
             dominantBaseline="central"
-            className="text-l font-semibold" 
+            className="text-l font-semibold"
         >
             {displayText}
         </text>
@@ -49,7 +49,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
-        const fill = COLORS[payload[0].dataIndex % COLORS.length]; 
+        const fill = COLORS[payload[0].dataIndex % COLORS.length];
         return (
             <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
                 <p className="text-sm text-gray-900 dark:text-gray-100" style={{ color: fill }}>
@@ -103,8 +103,8 @@ const CustomPieChart = ({ series, height = 300 }) => {
                         dataKey="value"
                     >
                         {data.map((entry, index) => (
-                            <Cell 
-                                key={`cell-${index}`} 
+                            <Cell
+                                key={`cell-${index}`}
                                 fill={COLORS[index % COLORS.length]}
                             />
                         ))}
