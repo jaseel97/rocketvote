@@ -10,5 +10,6 @@ nginx/certs/
 *.key
 .env
 .vscode
-voting/migrations/*0*.py
+
 .idea
+postgres/*
