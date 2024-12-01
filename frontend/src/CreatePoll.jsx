@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
 import useFetch from "./useFetch";
 import { useTheme } from './ThemeContext';
+import { useAuth } from './context/AuthContext';
+
 import {
     PlusCircleIcon as PlusCircleOutline,
     TrashIcon as TrashOutline,
@@ -15,6 +18,17 @@ import {
 } from "./Config"
 
 const CreatePoll = () => {
+    const { isAuthenticated, redirectToLogin } = useAuth();
+    
+    useEffect(() => {
+        if (isAuthenticated === false) {
+            redirectToLogin();
+        }
+    }, [isAuthenticated]);
+
+    if (isAuthenticated === null) return <div>Redirecting to login...</div>;
+    if (!isAuthenticated) return null;
+
     const { darkMode } = useTheme();
     const [description, setDescription] = useState("");
     const [options, setOptions] = useState(["", "", "", ""]);

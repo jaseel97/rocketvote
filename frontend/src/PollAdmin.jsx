@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+
+import { useAuth } from './context/AuthContext';
+
 import CustomPieChart from './PieChart';
 import AnimatedPollOptions from './AnimatedPollOptions';
 
@@ -11,6 +14,18 @@ import {
 } from "./Config"
 
 const PollAdmin = () => {
+    const { isAuthenticated, redirectToLogin } = useAuth();
+    
+    useEffect(() => {
+        if (isAuthenticated === false) {
+            redirectToLogin();
+        }
+    }, [isAuthenticated]);
+
+    if (isAuthenticated === null) return <div>Redirecting to login...</div>;
+    if (!isAuthenticated) return null;
+
+
     const location = useLocation();
     const { poll_id, redirect_url } = location.state || {};
     const [pollData, setPollData] = useState(null);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
+
 import CustomPieChart from './PieChart';
+import { useAuth } from './context/AuthContext';
 
 import {
     appDomain,
@@ -117,6 +119,17 @@ const UsernameModal = ({ username, setUsername, onSubmit }) => {
     );
 };
 const VotePoll = () => {
+    const { isAuthenticated, redirectToLogin } = useAuth();
+    
+    useEffect(() => {
+        if (isAuthenticated === false) {
+            redirectToLogin();
+        }
+    }, [isAuthenticated]);
+
+    if (isAuthenticated === null) return <div>Redirecting to login...</div>;
+    if (!isAuthenticated) return null;
+
     const { poll_id } = useParams();
     const [pollData, setPollData] = useState(null);
     const [isPending, setIsPending] = useState(true);

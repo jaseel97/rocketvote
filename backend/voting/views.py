@@ -1,16 +1,21 @@
 import os
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from django.http import HttpResponse, HttpResponseServerError, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 
 import json
 from nanoid import generate
 
+from voting.auth import AzureADTokenVerifier
+from rocketVoteAPI import settings
+
 from .tasks import delete_poll
 from .utils import get_poll, get_poll_from_creation_id, get_poll_results, make_poll_metadata_string
 from .models import PollTemplate
 from .redis_pool import get_redis_connection
+
+import msal
 
 # required_fields = ['type', 'options', 'revealed', 'multi_selection']
 required_fields = ['type', 'revealed', 'multi_selection', 'options', 'description']
@@ -235,3 +240,32 @@ def poll_admin(request, creation_id):
         return JsonResponse({'message':'Poll results revealed'}, status=200)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# def oauth_callback(request):
+#     code = request.GET.get('code')
+#     return_path = request.GET.get('state', '/')
+
+#     msal_app = msal.ConfidentialClientApplication(
+#         client_id=settings.MICROSOFT_AUTH['CLIENT_ID'],
+#         client_credential=settings.MICROSOFT_AUTH['CLIENT_SECRET'],
+#         authority=f"https://login.microsoftonline.com/{settings.MICROSOFT_AUTH['TENANT_ID']}"
+#     )
+    
+#     result = msal_app.acquire_token_by_authorization_code(
+#             code, 
+#             scopes=['User.Read'],
+#             redirect_uri="https://rocketvote.com/api/oauth2/callback"
+#         )
+    
+#     response = HttpResponseRedirect(return_path)
+#     response.set_cookie(
+#         'auth_token',
+#         result['access_token'],
+#         httponly=True,
+#         secure=True,
+#         samesite='Lax'
+#     )
+    
+#     return response
+

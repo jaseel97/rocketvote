@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-705i4w^m5kfy7l-!qrci&clg(@jq2(^&5qpgl&0v0!s$8hi#l2'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'voting.apps.VotingConfig',
     'corsheaders',
     'channels',
-    # 'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -151,4 +150,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL','redis://redis:6379/1')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND','redis://redis:6379/1')
 CELERY_IMPORTS = ('voting.tasks',)
-# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+MICROSOFT_AUTH = {
+    'TENANT_ID': os.getenv('ENTRA_TENANT_ID'),
+    'CLIENT_ID': os.getenv('ENTRA_CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('ENTRA_CLIENT_SECRET'),
+    'REDIRECT_URI': os.getenv('ENTRA_REDIRECT_URI'),
+}
