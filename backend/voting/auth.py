@@ -72,7 +72,7 @@ class AzureADTokenVerifier:
         except Exception as e:
             return False, str(e)
 
-def verify_azure_token(view_func):
+def is_authenticated(view_func):
     """Decorator to verify Azure AD ID token from cookie"""
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
@@ -85,6 +85,12 @@ def verify_azure_token(view_func):
         
         if not is_valid:
             return HttpResponseForbidden(f'Invalid token: {result}')
+        
+        request.user = {
+            'name': result.get('name'),
+            'email': result.get('preferred_username'),
+            'object_id': result.get('oid'),
+        }
             
         request.azure_user = result
         return view_func(request, *args, **kwargs)

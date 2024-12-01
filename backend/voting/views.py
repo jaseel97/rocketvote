@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from nanoid import generate
 
-from voting.auth import AzureADTokenVerifier
+from voting.auth import AzureADTokenVerifier, is_authenticated
 from rocketVoteAPI import settings
 
 from .tasks import delete_poll
@@ -24,6 +24,7 @@ result_limit = 12
 delete_seconds = int(os.getenv('AUTO_DELETE_DAYS', '10'))*24*60*60
 
 @csrf_exempt
+@is_authenticated
 def templates(request):
     if request.method == 'GET':
         try:
@@ -82,6 +83,7 @@ def templates(request):
 
 # takes the poll metadata from the UI and creates a new poll
 @csrf_exempt
+@is_authenticated
 def create(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method'}, status=400)
@@ -124,6 +126,7 @@ def create(request):
     )
 
 @csrf_exempt
+@is_authenticated
 def cast_vote(request, poll_id):
     if request.method not in ['PATCH', 'GET']:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
@@ -194,6 +197,7 @@ def cast_vote(request, poll_id):
         return JsonResponse({'message': 'Vote/s cast successfully'}, status=200)
 
 @csrf_exempt
+@is_authenticated
 def poll_admin(request, creation_id):
     redis_conn = get_redis_connection()
     if request.method == "GET":
@@ -240,6 +244,15 @@ def poll_admin(request, creation_id):
         return JsonResponse({'message':'Poll results revealed'}, status=200)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@is_authenticated
+def get_user_details(request):
+    user_details = {
+        'name': request.user['name'],
+        'email': request.user['email'],
+        'object_id': request.user['object_id']
+    }
+    return JsonResponse(user_details)
 
 
 # def oauth_callback(request):
