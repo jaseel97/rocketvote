@@ -4,3 +4,4 @@ from django.db import models
 class PollTemplate(models.Model):
     title = models.TextField()
     template = models.TextField()
+    created_by = models.TextField(null=True)

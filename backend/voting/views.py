@@ -26,10 +26,11 @@ delete_seconds = int(os.getenv('AUTO_DELETE_DAYS', '10'))*24*60*60
 @csrf_exempt
 @is_authenticated
 def templates(request):
+    print("REQUEST : ", request.user)
     if request.method == 'GET':
         try:
             query = request.GET.get('search', '')
-            results = PollTemplate.objects.filter(title__icontains=query) if query else PollTemplate.objects.all()
+            results = PollTemplate.objects.filter(title__icontains=query, created_by=request.user['object_id']) if query else PollTemplate.objects.filter(created_by=request.user['object_id'])
             response = {result.title: json.loads(result.template) for result in results[:12]}
             return JsonResponse(response, status=200)
         except Exception as e:
@@ -44,7 +45,8 @@ def templates(request):
             
             new_template = PollTemplate(
                 title=input_template['type'],
-                template=json.dumps(input_template)
+                template=json.dumps(input_template),
+                created_by = request.user['object_id']
             )
             new_template.save()
 
@@ -64,7 +66,7 @@ def templates(request):
                 return JsonResponse({'error': 'Title is required to delete a template'}, status=400)
 
             try:
-                template = PollTemplate.objects.get(title=template_title)
+                template = PollTemplate.objects.get(title=template_title, created_by=request.user['object_id'])
                 template.delete()
                 return JsonResponse({'message': f'Template with title "{template_title}" deleted successfully!'}, status=200)
 

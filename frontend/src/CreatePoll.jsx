@@ -96,9 +96,9 @@ const CreatePoll = () => {
     };
 
     const handleDeleteTemplate = (templateTitle) => {
-        console.log(JSON.stringify({
-            "title": templateTitle
-        }));
+        // console.log(JSON.stringify({
+        //     "title": templateTitle
+        // }));
 
         fetch(`${apiDomain}/templates`, {
             method: "DELETE",

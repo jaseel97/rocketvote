@@ -126,7 +126,7 @@ const PollAdmin = () => {
         label: option,
         value: Number(counts[option] || 0)
     }));
-    console.log(chartData)
+    // console.log(chartData)
     const inputClasses = `
         block px-2.5 pb-2.5 pt-6 w-full 
         text-base font-medium
