@@ -5,6 +5,8 @@ import useFetch from "./useFetch";
 import { useTheme } from './ThemeContext';
 import { useAuth } from './context/AuthContext';
 
+import { StyledToggle } from './StyledToggle'
+
 import {
     PlusCircleIcon as PlusCircleOutline,
     TrashIcon as TrashOutline,
@@ -19,7 +21,7 @@ import {
 
 const CreatePoll = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
-    
+
     useEffect(() => {
         if (isAuthenticated === false) {
             redirectToLogin();
@@ -38,6 +40,7 @@ const CreatePoll = () => {
     const [templateTitle, setTemplateTitle] = useState("");
     const [triggerFetch, setTriggerFetch] = useState(0);
     const [validationError, setValidationError] = useState("");
+    const [anonymous, setAnonymous] = useState(false);
     const navigate = useNavigate();
 
     const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates?_${triggerFetch}`);
@@ -143,6 +146,7 @@ const CreatePoll = () => {
             options,
             revealed: 0,
             multi_selection: multiSelection ? 1 : 0,
+            anonymous: anonymous ? 1 : 0,
         };
 
         fetch(`${apiDomain}/create`, {
@@ -176,9 +180,9 @@ const CreatePoll = () => {
         setOptions(["", "", "", ""]);
         setActiveTemplate("");
         setMultiSelection(false);
-        setTemplateTitle("")
+        setAnonymous(false);
+        setTemplateTitle("");
     };
-
     const handleAddOption = (index) => {
         const updatedOptions = [...options];
         updatedOptions.splice(index + 1, 0, "");
@@ -515,7 +519,7 @@ const CreatePoll = () => {
                                 </div>
                             ))}
 
-                            <div className="relative mb-6 mt-6">
+                            {/* <div className="relative mb-6 mt-6">
                                 <div className={`block px-2.5 pb-2.5 pt-4 w-full text-sm 
                                             text-gray-900 dark:text-white 
                                             bg-gray-100 dark:bg-gray-600 
@@ -568,6 +572,57 @@ const CreatePoll = () => {
                                         background-color: rgb(55 65 81) !important;
                                     }
                                 `}</style>
+                            </div> */}
+                            {/* <div className="relative mb-6 mt-6 space-y-4">
+                                <div className={`block px-2.5 pb-2.5 pt-4 w-full text-sm 
+        text-gray-900 dark:text-white 
+        bg-gray-100 dark:bg-gray-600 
+        border-0 border-b-2 
+        ${multiSelection
+                                        ? "border-red-500 dark:border-red-400"
+                                        : "border-gray-300 dark:border-gray-500"}
+        rounded-t-lg 
+        hover:border-red-500 dark:hover:border-red-400 
+        hover:bg-gray-50 dark:hover:bg-gray-700
+        transition-all duration-300
+        group`}>
+                                    <StyledToggle
+                                        isChecked={multiSelection}
+                                        onChange={setMultiSelection}
+                                        label="Allow Multiple Selections"
+                                    />
+                                </div>
+
+                                <div className={`block px-2.5 pb-2.5 pt-4 w-full text-sm 
+        text-gray-900 dark:text-white 
+        bg-gray-100 dark:bg-gray-600 
+        border-0 border-b-2 
+        ${anonymous
+                                        ? "border-red-500 dark:border-red-400"
+                                        : "border-gray-300 dark:border-gray-500"}
+        rounded-t-lg 
+        hover:border-red-500 dark:hover:border-red-400 
+        hover:bg-gray-50 dark:hover:bg-gray-700
+        transition-all duration-300
+        group`}>
+                                    <StyledToggle
+                                        isChecked={anonymous}
+                                        onChange={setAnonymous}
+                                        label="Anonymous Poll"
+                                    />
+                                </div>
+                            </div> */}
+                            <div className="flex gap-6 items-center">
+                                <StyledToggle
+                                    isChecked={multiSelection}
+                                    onChange={setMultiSelection}
+                                    label="Allow Multiple Selections"
+                                />
+                                <StyledToggle
+                                    isChecked={anonymous}
+                                    onChange={setAnonymous}
+                                    label="Anonymous Poll"
+                                />
                             </div>
 
                             <div className="mt-6 flex gap-4">

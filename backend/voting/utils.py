@@ -22,11 +22,11 @@ def parse_poll_metadata_string(poll_string):
 
     try:
         params = poll_string.split('-;-')
-        if len(params) < 5:
+        if len(params) < 6:
             print("Incomplete poll string")
             return None
 
-        description, poll_type, revealed, multi_selection, options = params
+        description, poll_type, revealed, multi_selection, anonymous, options = params
         options_list = options.split("-:-")
 
         return {
@@ -34,6 +34,7 @@ def parse_poll_metadata_string(poll_string):
             'type': poll_type,
             'revealed': revealed,
             'multi_selection': multi_selection,
+            'anonymous': anonymous,
             'options': options_list
         }
 
@@ -43,7 +44,7 @@ def parse_poll_metadata_string(poll_string):
     
 def make_poll_metadata_string(poll):
     options = "-:-".join(poll['options'])
-    poll_string = f"{poll['description']}-;-{poll['type']}-;-{poll['revealed']}-;-{poll['multi_selection']}-;-{options}"
+    poll_string = f"{poll['description']}-;-{poll['type']}-;-{poll['revealed']}-;-{poll['multi_selection']}-;-{poll['anonymous']}-;-{options}"
     return poll_string
 
 def get_poll_results(redis_conn, poll_id):

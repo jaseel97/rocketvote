@@ -103,13 +103,15 @@ def create(request):
     
     if len(poll_body['options']) != len(set(poll_body['options'])):
         return JsonResponse({'error': 'Duplicate options are not allowed'}, status=400)
+    
+    anonymous = poll_body.get('anonymous', 0)
 
     creation_id = generate()
     new_poll_id = generate(size=8)  # for shareable URL
 
     poll_metadata_key = f'{new_poll_id}:metadata'
     options = "-:-".join(poll_body['options'])
-    poll_metadata = f"{poll_body['description']}-;-{poll_body['type']}-;-{poll_body['revealed']}-;-{poll_body['multi_selection']}-;-{options}"
+    poll_metadata = f"{poll_body['description']}-;-{poll_body['type']}-;-{poll_body['revealed']}-;-{poll_body['multi_selection']}-;-{anonymous}-;-{options}"
 
     try:
         redis_conn = get_redis_connection()
