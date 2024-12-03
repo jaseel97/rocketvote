@@ -3,44 +3,18 @@
 @tailwind utilities;
 
 @layer utilities {
-    .font-size-smaller { font-size: 0.875rem; }
-    .font-size-default { font-size: 1rem; }
-    .font-size-bigger { font-size: 1.125rem; }
-  
-    .line-height-smaller { line-height: 1.25; }
-    .line-height-default { line-height: 1.5; }
-    .line-height-bigger { line-height: 1.75; }
-  
-    .letter-spacing-smaller { letter-spacing: -0.025em; }
-    .letter-spacing-default { letter-spacing: 0; }
-    .letter-spacing-bigger { letter-spacing: 0.025em; }
-  
-    .font-sans-family { font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; }
-    .font-serif-family { font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
-    .font-mono-family { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-  
-    .font-style-default { font-style: normal; font-weight: normal; }
-    .font-style-italic { font-style: italic; }
-    .font-style-bold { font-weight: bold; }
-  }
+
+    .text-inherit-size {
+        font-size: inherit;
+    }
+      
+    h2, label, .label-base, .textarea-label {
+        @apply text-inherit-size;
+    }
+}
 
 
 @layer components {
-
-    .accessibility-option {
-        @apply flex flex-col items-center justify-center p-3 rounded-lg 
-        hover:bg-gray-100 dark:hover:bg-gray-700 
-        transition-colors cursor-pointer;
-      }
-    
-      .accessibility-icon {
-        @apply w-6 h-6 mb-2;
-      }
-    
-      .accessibility-label {
-        @apply text-xs text-center;
-      }
-      
   .input-base {
     @apply block px-2.5 pb-2.5 pt-4 w-full text-sm
     text-gray-900 dark:text-white
@@ -66,7 +40,7 @@
     peer-placeholder-shown:scale-100
     peer-placeholder-shown:-translate-y-1/2
     peer-placeholder-shown:top-1/2
-    peer-focus:top-2 peer-hover:top-2
+    peer-focus:top-0 peer-hover:top-0
     peer-focus:scale-75 peer-hover:scale-75
     peer-focus:-translate-y-4 peer-hover:-translate-y-4
     peer-focus:text-red-500 peer-hover:text-red-500
@@ -77,7 +51,7 @@
   .textarea-label {
     @apply label-base 
     peer-placeholder-shown:top-6
-    peer-focus:top-2 peer-hover:top-2
+    peer-focus:top-0 peer-hover:top-0
     peer-focus:-translate-y-4 peer-hover:-translate-y-4
     peer-focus:scale-75 peer-hover:scale-75;
   }

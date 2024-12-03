@@ -18,6 +18,28 @@ export default {
       animation: {
         wiggle: 'wiggle 0.4s ease-in-out infinite',
       },
+      fontSize: {
+        'base': '1rem', 
+        'lg': '1.5rem',   
+        'xl': '2rem',
+      },
+      fontFamily: {
+        'serif': ['ui-sans-serif', 'system-ui', 'sans-serif'],
+        'sans': ['ui-serif', 'Georgia', 'Cambria'],
+        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo']
+      },
+      fontStyle: {
+        'default': {
+          fontStyle: 'normal',
+          fontWeight: 'normal'
+        },
+        'italic': {
+          fontStyle: 'italic'
+        },
+        'bold': {
+          fontWeight: 'bold'
+        }
+      },
       // Add custom colors for consistency
       colors: {
         primary: {

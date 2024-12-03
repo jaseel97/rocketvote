@@ -170,19 +170,16 @@ const CreatePoll = () => {
         : [];
 
     return (
-        <div className={`
-            min-h-screen max-h-full w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-4
-            font-size-${settings.fontSize}
-            line-height-${settings.lineHeight}
-            letter-spacing-${settings.letterSpacing}
-            font-${settings.fontFamily}-family
-            font-style-${settings.fontStyle}
-        `}>
+<div className={`
+  min-h-screen max-w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-4
+  ${settings.fontSize}
+  ${settings.fontFamily}
+  ${settings.fontStyle}
+`}>
             <div className="w-full bg-[#DEE4E7] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
                 <div className="flex flex-col md:flex-row">
                     <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Poll Templates</h2>
-
+                    <h2 className={`${settings.fontSize === 'text-lg' ? 'text-4xl' : settings.fontSize === 'text-xl' ? 'text-5xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>Poll Templates</h2>
                         <div className="relative">
                             <input
                                 type="text"
@@ -243,7 +240,7 @@ const CreatePoll = () => {
                     </div>
 
                     <div className="w-full md:w-1/2">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Create Poll</h2>
+                    <h2 className={`${settings.fontSize === 'text-lg' ? 'text-4xl' : settings.fontSize === 'text-xl' ? 'text-5xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>Create Poll</h2>
 
                         {validationError && (
                             <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
