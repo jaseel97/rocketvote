@@ -1,3 +1,184 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    .text-inherit-size {
+        font-size: inherit;
+    }
+      
+    h2, label, .label-base, .textarea-label {
+        @apply text-inherit-size;
+    }
+}
+
+@layer components {
+  /* Base button styles */
+  .button-base {
+    @apply relative overflow-hidden px-8 py-3 rounded-2xl
+    bg-gradient-to-r from-gray-50 to-gray-100
+    dark:from-gray-800 dark:to-gray-700
+    font-medium border-2
+    before:absolute before:inset-0
+    before:bg-gradient-to-r
+    before:translate-x-[-200%]
+    hover:before:translate-x-[200%]
+    before:transition-transform before:duration-1000
+    transition-all duration-300 ease-in-out;
+  }
+
+  /* Base shadow styles */
+  .shadow-neumorphic {
+    @apply shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
+    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)];
+  }
+
+  .button-neumorphic {
+    @apply ml-2 p-3 rounded-2xl
+    bg-gradient-to-br text-gray-600 dark:text-gray-400 border
+    transition-all duration-300 ease-in-out;
+  }
+
+  /* End buttons */
+  .end-button {
+    @apply button-base shadow-neumorphic
+    bg-gradient-to-r from-gray-50 to-gray-100 
+    dark:from-gray-800 dark:to-gray-900;
+  }
+
+  .end-button-green {
+    @apply text-green-500 dark:text-green-400 
+    border-green-400 dark:border-green-400/30
+    hover:border-green-600 dark:hover:border-green-400/50
+    from-white to-green-200;
+  }
+
+  .end-button-red {
+    @apply text-red-500 dark:text-red-400
+    border-red-400 dark:border-red-400/30
+    hover:border-red-600 dark:hover:border-red-400/50
+    from-white to-red-200;
+  }
+
+  .end-button-sky {
+    @apply text-sky-500 dark:text-sky-400
+    border-sky-400 dark:border-sky-400/30
+    hover:border-sky-600 dark:hover:border-sky-400/50
+    from-white to-sky-200;
+  }
+
+  /* Button variants */
+  .button-variant-green {
+    @apply from-white to-green-200 shadow-neumorphic
+    dark:from-gray-800 dark:to-green-900/20
+    border-green-500 dark:border-green-500/20
+    hover:text-green-600 dark:hover:text-green-400;
+  }
+
+  .button-variant-red {
+    @apply from-white to-red-200 shadow-neumorphic
+    dark:from-gray-800 dark:to-red-900/20
+    border-red-500 dark:border-red-500/20
+    hover:text-red-600 dark:hover:text-red-400;
+  }
+
+  .button-variant-sky {
+    @apply button-base text-sky-500 dark:text-sky-400
+    border-sky-500/30 dark:border-sky-400/30
+    shadow-neumorphic before:from-sky-500/0 before:via-sky-500/10 before:to-sky-500/0
+    hover:border-sky-500/50 dark:hover:border-sky-400/50;
+  }
+
+  /* Form inputs */
+  .input-base {
+    @apply block px-2.5 pb-2.5 pt-4 w-full text-sm
+    text-gray-900 dark:text-white
+    bg-gray-50 dark:bg-gray-600
+    border-0 border-b-2 border-gray-300 dark:border-gray-500
+    rounded-t-lg appearance-none focus:outline-none
+    focus:border-red-500 dark:focus:border-red-400
+    focus:bg-gray-50 dark:focus:bg-gray-700
+    hover:border-red-500 dark:hover:border-red-400
+    hover:bg-gray-50 dark:hover:bg-gray-700
+    transition-all duration-300;
+  }
+
+  .label-base {
+    @apply absolute text-sm text-gray-800 dark:text-gray-400
+    duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0]
+    bg-transparent px-2 left-1 peer-focus:px-2 peer-hover:px-2
+    peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2
+    peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-hover:top-0
+    peer-focus:scale-75 peer-hover:scale-75
+    peer-focus:-translate-y-4 peer-hover:-translate-y-4
+    peer-focus:text-red-500 peer-hover:text-red-500
+    dark:peer-focus:text-red-400 dark:peer-hover:text-red-400
+    peer-focus:font-medium peer-hover:font-medium;
+  }
+
+  .textarea-label {
+    @apply label-base peer-placeholder-shown:top-6
+    peer-focus:top-0 peer-hover:top-0
+    peer-focus:-translate-y-4 peer-hover:-translate-y-4
+    peer-focus:scale-75 peer-hover:scale-75;
+  }
+
+  /* Special buttons */
+  .delete-icon-button {
+    @apply absolute -top-3 -right-3 z-20 p-1.5 rounded-full
+    bg-gradient-to-r  bg-red-600/30 dark:from-gray-800 dark:to-red-900/20
+    text-gray-500 dark:text-gray-400 
+    border border-red-200/50 dark:border-red-500/20
+    hover:text-red-600 dark:hover:text-red-600
+    disabled:opacity-50 disabled:cursor-not-allowed
+    transition-all duration-300;
+  }
+
+  .reveal-button {
+    @apply button-base text-green-500 dark:text-green-400
+    border-green-500/30 dark:border-green-400/30
+    shadow-neumorphic before:from-green-500/0 before:via-green-500/10 before:to-green-500/0
+    hover:border-green-500/50 dark:hover:border-green-400/50;
+  }
+
+  .revealed-button {
+    @apply button-base text-gray-400 dark:text-gray-500
+    border-gray-300/30 dark:border-gray-600/30
+    shadow-neumorphic before:from-gray-400/0 before:via-gray-400/5 before:to-gray-400/0
+    cursor-not-allowed;
+  }
+
+  /* Layout classes */
+  .poll-dashboard-container {
+    @apply min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-4;
+  }
+
+  .poll-inner-container {
+    @apply w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12;
+  }
+
+  .poll-dashboard-inner, .poll-section-inner {
+    @apply poll-inner-container;
+  }
+
+  .poll-section-container {
+    @apply w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-2 rounded-md;
+  }
+
+  .poll-heading {
+    @apply text-2xl text-center font-bold text-gray-900 dark:text-white mb-6;
+  }
+
+  .poll-subheading {
+    @apply text-xl font-bold text-gray-900 dark:text-white mb-4 text-center;
+  }
+
+  /* Utility classes */
+  .chart-container { @apply bg-transparent rounded-2xl p-6 shadow-neumorphic; }
+  .flex-container { @apply flex gap-4; }
+  .no-votes-message { @apply flex items-center justify-center h-[300px] text-gray-500; }
+  .loading-message { @apply text-gray-900 dark:text-white; }
+  .error-message { @apply text-red-500 dark:text-red-400; }
+  .two-column-layout { @apply block md:flex md:space-x-8; }
+  .column { @apply w-full md:w-1/2 mb-8 md:mb-0; }
+}
