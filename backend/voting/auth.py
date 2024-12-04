@@ -68,7 +68,7 @@ class AzureADTokenVerifier:
         if required_identifier in groups:
             return True, decoded
 
-        return False, "User does not have permission to access rocketvote. Ask a system admin to add you to the rocketvote group or role for access/"
+        return False, "User does not have permission to access rocketvote. Ask a system admin to add you to the rocketvote group or role for access."
 
     def verify_token(self, token):
         """
