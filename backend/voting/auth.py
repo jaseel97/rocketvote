@@ -53,6 +53,7 @@ class AzureADTokenVerifier:
 
     def verify_access(self, token):
         """Verify if the user has the required role or group access"""
+        print("VERIFY ACCESS FOR TOKEN : ", token)
         is_valid, decoded = self.verify_token(token)
         if not is_valid:
             return False, decoded
@@ -67,7 +68,7 @@ class AzureADTokenVerifier:
         if required_identifier in groups:
             return True, decoded
 
-        return False, "User does not have required access"
+        return False, "User does not have permission to access rocketvote. Ask a system admin to add you to the rocketvote group or role for access/"
 
     def verify_token(self, token):
         """
@@ -140,8 +141,8 @@ def oauth_callback(request):
         id_token = result.get('id_token')
         access_token = result.get('access_token')
 
-        print("ID TOKEN:", id_token)
-        print("ACCESS TOKEN: ", access_token)
+        # print("ID TOKEN:", id_token)
+        # print("ACCESS TOKEN: ", access_token)
         
         if not id_token or not access_token:
             return HttpResponseBadRequest("Missing required tokens from Azure AD")
