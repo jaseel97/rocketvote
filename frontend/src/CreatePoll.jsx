@@ -82,6 +82,7 @@ const CreatePoll = () => {
                 options,
                 revealed: 0,
                 multi_selection: multiSelection ? 1 : 0,
+                anonymous
             }),
         })
             .then((res) => {
@@ -207,6 +208,7 @@ const CreatePoll = () => {
         setActiveTemplate(template.type);
         setMultiSelection(template.multi_selection === 1);
         setTemplateTitle(template.type);
+        setAnonymous(template.anonymous)
     };
 
     const filteredTemplates = templates

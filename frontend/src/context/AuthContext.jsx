@@ -19,11 +19,6 @@ export const AuthProvider = ({ children }) => {
 
     const redirectToLogin = () => {
         const returnUrl = encodeURIComponent(window.location.pathname);
-        // adf55c08-b67b-4701-ad38-5cca21d455b0
-        // f647dc60-9ca8-4a99-ae7a-7f232d23cd79
-        // console.log("ENV URI : ", ENTRA_REDIRECT_URI)
-        // console.log("ENV OTF : ", encodeURIComponent(window.location.origin + '/api/oauth2/callback'))
-        // window.location.href = `https://login.microsoftonline.com/${ENTRA_TENANT_ID}/oauth2/v2.0/authorize?client_id=${ENTRA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(window.location.origin + '/api/oauth2/callback')}&scope=User.Read&state=${returnUrl}`;
         window.location.href = `https://login.microsoftonline.com/${ENTRA_TENANT_ID}/oauth2/v2.0/authorize?` +
             `client_id=${ENTRA_CLIENT_ID}` +
             `&response_type=code` +

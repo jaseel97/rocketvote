@@ -13,3 +13,5 @@ nginx/certs/
 
 .idea
 postgres/*
+
+local_jwks.json

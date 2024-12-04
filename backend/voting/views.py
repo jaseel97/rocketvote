@@ -26,7 +26,6 @@ delete_seconds = int(os.getenv('AUTO_DELETE_DAYS', '10'))*24*60*60
 @csrf_exempt
 @is_authenticated
 def templates(request):
-    print("REQUEST : ", request.user)
     if request.method == 'GET':
         try:
             query = request.GET.get('search', '')
