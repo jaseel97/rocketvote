@@ -106,22 +106,35 @@
   .label-base {
     @apply absolute text-sm text-gray-800 dark:text-gray-400
     duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0]
-    bg-transparent px-2 left-1 peer-focus:px-2 peer-hover:px-2
-    peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2
-    peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-hover:top-0
+    bg-transparent px-2 left-1 
+    
+    /* When placeholder is shown (empty input) */
+    peer-placeholder-shown:scale-100 
+    peer-placeholder-shown:-translate-y-1/2
+    peer-placeholder-shown:top-1/2 
+    
+    /* When input has value (placeholder not shown) */
+    peer-[:not(:placeholder-shown)]:text-red-400
+    peer-[:not(:placeholder-shown)]:scale-75
+    peer-[:not(:placeholder-shown)]:-translate-y-4
+    peer-[:not(:placeholder-shown)]:top-0
+    
+    /* Focus and hover states */
+    peer-focus:px-2 peer-hover:px-2
+    peer-focus:top-0 peer-hover:top-0
     peer-focus:scale-75 peer-hover:scale-75
     peer-focus:-translate-y-4 peer-hover:-translate-y-4
-    peer-focus:text-red-500 peer-hover:text-red-500
+    peer-focus:text-red-400 peer-hover:text-red-400
     dark:peer-focus:text-red-400 dark:peer-hover:text-red-400
     peer-focus:font-medium peer-hover:font-medium;
-  }
+}
 
-  .textarea-label {
-    @apply label-base peer-placeholder-shown:top-6
-    peer-focus:top-0 peer-hover:top-0
-    peer-focus:-translate-y-4 peer-hover:-translate-y-4
-    peer-focus:scale-75 peer-hover:scale-75;
-  }
+.textarea-label {
+  @apply label-base peer-placeholder-shown:top-6
+  peer-focus:top-0 peer-hover:top-0
+  peer-focus:-translate-y-4 peer-hover:-translate-y-4  /* Now both are -4 */
+  peer-focus:scale-75 peer-hover:scale-75;
+}
 
   /* Special buttons */
   .delete-icon-button {
