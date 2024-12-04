@@ -119,7 +119,12 @@ const CreatePoll = () => {
                     window.open(`${appDomain}/${responseData.poll_id}`, "_blank");
                 }
                 if (responseData.redirect_url) {
-                    navigate(responseData.redirect_url);
+                    navigate(`/create/${responseData.poll_id}`, {
+                        state: { 
+                            poll_id: responseData.poll_id,
+                            redirect_url: responseData.redirect_url
+                        }
+                    });
                 }
                 setValidationError("");
             })

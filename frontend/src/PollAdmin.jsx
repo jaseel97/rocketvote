@@ -82,20 +82,20 @@ const PollAdmin = () => {
     };
 
     if (isPending) return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
-            <p className="text-gray-900 dark:text-white">Loading poll data...</p>
+        <div className="poll-dashboard-container">
+            <p className="loading-message">Loading poll data...</p>
         </div>
     );
 
     if (error) return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
-            <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+        <div className="poll-dashboard-container">
+            <p className="error-message">Error: {error}</p>
         </div>
     );
 
     if (!pollData || !pollData.metadata) return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
-            <p className="text-gray-900 dark:text-white">No poll data available.</p>
+        <div className="poll-dashboard-container">
+            <p className="loading-message">No poll data available.</p>
         </div>
     );
 
@@ -111,146 +111,66 @@ const PollAdmin = () => {
         label: option,
         value: Number(counts[option] || 0)
     }));
-    console.log(chartData)
-    const inputClasses = `
-        block px-2.5 pb-2.5 pt-6 w-full 
-        text-base font-medium
-        text-gray-900 dark:text-white 
-        bg-gray-100 dark:bg-gray-600 
-        border-0 border-b-2 border-gray-300 dark:border-gray-500
-        rounded-t-lg 
-        appearance-none 
-        focus:outline-none 
-        focus:border-red-500 dark:focus:border-red-400 
-        focus:bg-gray-50 dark:focus:bg-gray-700
-        hover:border-red-500 dark:hover:border-red-400 
-        hover:bg-gray-50 dark:hover:bg-gray-700
-        hover:text-lg
-        focus:text-lg
-        not-placeholder-shown:bg-gray-50 dark:not-placeholder-shown:bg-gray-700
-        not-placeholder-shown:border-red-500 dark:not-placeholder-shown:border-red-400
-        peer 
-        transition-all duration-300
-    `;
-
-    const labelClasses = `
-        absolute text-xs
-        text-red-500 dark:text-red-400 
-        duration-300 transform 
-        top-2 left-2.5
-        z-10 origin-[0] 
-        bg-transparent
-        px-0
-        font-normal
-        hover:font-medium
-        hover:text-red-600
-        focus:font-medium
-        peer-hover:font-medium
-        peer-focus:font-medium
-        peer-[&:not(:placeholder-shown)]:font-medium
-        peer-hover:top-1
-        peer-focus:top-1
-        peer-[&:not(:placeholder-shown)]:top-1
-        transition-all duration-300
-    `;
-
-    const buttonStyle = `
-        px-8 py-3 rounded-2xl 
-        relative overflow-hidden
-        bg-gradient-to-r from-gray-50 to-gray-100
-        dark:from-gray-800 dark:to-gray-750
-        font-medium
-        border-2
-        text-sky-500 dark:text-sky-400
-        border-sky-500/30 dark:border-sky-400/30
-        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(14,165,233,0.2)]
-        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(56,189,248,0.2)]
-        before:absolute before:inset-0
-        before:bg-gradient-to-r
-        before:from-sky-500/0 before:via-sky-500/10 before:to-sky-500/0
-        before:translate-x-[-200%]
-        hover:before:translate-x-[200%]
-        before:transition-transform before:duration-1000
-        hover:border-sky-500/50 dark:hover:border-sky-400/50
-        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(14,165,233,0.3)]
-        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(56,189,248,0.3)]
-        transition-all duration-300 ease-in-out
-        shrink-0
-    `;
-
-    const endButtons = `
-        px-8 py-3 rounded-2xl 
-        relative overflow-hidden
-        bg-gradient-to-r from-gray-50 to-gray-100
-        dark:from-gray-800 dark:to-gray-750
-        font-medium
-        border-2
-        before:absolute before:inset-0
-        before:bg-gradient-to-r
-        before:translate-x-[-200%]
-        hover:before:translate-x-[200%]
-        before:transition-transform before:duration-1000
-        transition-all duration-300 ease-in-out
-    `;
 
     return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-4">
-            <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
-                <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-6">Voting Dashboard</h2>
+        <div className="poll-dashboard-container">
+            <div className="poll-dashboard-inner">
+                <h2 className="poll-heading">Voting Dashboard</h2>
 
                 <div className="mb-6">
-                    <div className="flex gap-4">
-                        <div className="relative flex-1">
-                            <input
-                                type="text"
-                                id="poll-url"
-                                value={`${appDomain}/${poll_id}`}
-                                readOnly
-                                placeholder=" "
-                                className={inputClasses}
-                            />
-                            <label
-                                htmlFor="poll-url"
-                                className={labelClasses}
-                            >
-                                Poll URL
-                            </label>
-                        </div>
-                        <button
-                            onClick={handleCopy}
-                            className={buttonStyle}
-                        >
-                            <span className="relative z-10">
-                                {copySuccess ? 'Copied!' : 'Copy URL'}
-                            </span>
-                        </button>
-                    </div>
+                <div className="flex-container">
+    <div className="relative flex-1">
+        <input
+            type="text"
+            id="poll-url"
+            value={`${appDomain}/${poll_id || pollId}`}
+            readOnly
+            placeholder=" "
+            className="input-base hover:text-lg focus:text-lg" // Added hover and focus effects
+        />
+        <label
+            htmlFor="poll-url"
+            className="label-base hover:text-red-600 dark:hover:text-red-400 
+                     focus:text-red-600 dark:focus:text-red-400"
+        >
+            Poll URL
+        </label>
+    </div>
+    <button 
+    onClick={handleCopy} 
+    className="button-variant-sky"
+>
+    <span className="relative z-10">
+        {copySuccess ? 'Copied!' : 'Copy URL'}
+    </span>
+</button>
+</div>
                 </div>
 
                 <div className="relative mb-6">
-                    <textarea
-                        id="description"
-                        value={description}
-                        readOnly
-                        placeholder=" "
-                        rows="3"
-                        className={`${inputClasses} resize-none`}
-                    ></textarea>
-                    <label
-                        htmlFor="description"
-                        className={labelClasses}
-                    >
-                        Description/Question
-                    </label>
-                </div>
-                <div className="w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-2  rounded-md">
-                    <div className="w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-md shadow-md p-8 md:p-12">
-                        <div className="block md:flex md:space-x-8">
-                            <div className="w-full md:w-1/2 mb-8 md:mb-0">
+    <textarea
+        id="description"
+        value={description}
+        readOnly
+        placeholder=" "
+        rows="3"
+        className="input-base resize-none hover:text-lg focus:text-lg"
+    ></textarea>
+    <label
+        htmlFor="description"
+        className="textarea-label hover:text-red-600 dark:hover:text-red-400 
+                 focus:text-red-600 dark:focus:text-red-400"
+    >
+        Description/Question
+    </label>
+</div>
+
+                <div className="poll-section-container">
+                    <div className="poll-section-inner">
+                        <div className="two-column-layout">
+                            <div className="column">
                                 <div className="relative isolate">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                                        Overview
-                                    </h3>
+                                    <h3 className="poll-subheading">Overview</h3>
 
                                     <AnimatedPollOptions
                                         options={options}
@@ -262,30 +182,16 @@ const PollAdmin = () => {
 
                                     <div className="mt-6">
                                         {!isRevealed ? (
-                                            <button
-                                                onClick={handleReveal}
-                                                className={`${endButtons}
-                                    text-green-500 dark:text-green-400
-                                    border-green-500/30 dark:border-green-400/30
-                                    shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(34,197,94,0.2)]
-                                    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(74,222,128,0.2)]
-                                    before:from-green-500/0 before:via-green-500/10 before:to-green-500/0
-                                    hover:border-green-500/50 dark:hover:border-green-400/50
-                                    hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(34,197,94,0.3)]
-                                    dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(74,222,128,0.3)]`}
+                                            <button 
+                                                onClick={handleReveal} 
+                                                className="reveal-button"
                                             >
                                                 <span className="relative z-10">Reveal Poll Results</span>
                                             </button>
                                         ) : (
-                                            <button
-                                                disabled
-                                                className={`${endButtons}
-                                    text-gray-400 dark:text-gray-500
-                                    border-gray-300/30 dark:border-gray-600/30
-                                    shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)]
-                                    dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]
-                                    before:from-gray-400/0 before:via-gray-400/5 before:to-gray-400/0
-                                    cursor-not-allowed`}
+                                            <button 
+                                                disabled 
+                                                className="revealed-button"
                                             >
                                                 <span className="relative z-10">Results Revealed</span>
                                             </button>
@@ -294,24 +200,29 @@ const PollAdmin = () => {
                                 </div>
                             </div>
 
-                            <div className="w-full md:w-1/2">
+                            <div className="column">
                                 <div className="relative isolate">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                                        Visual Breakdown
-                                    </h3>
-                                    <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
+                                    <h3 className="poll-subheading">Visual Breakdown</h3>
+                                    <div className="chart-container">
                                         {totalVotes > 0 ? (
                                             <div className="relative isolate">
                                                 <CustomPieChart
                                                     series={[{
                                                         data: chartData,
-                                                        highlightScope: { fade: 'global', highlight: 'item' },
-                                                        faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
+                                                        highlightScope: { 
+                                                            fade: 'global', 
+                                                            highlight: 'item' 
+                                                        },
+                                                        faded: { 
+                                                            innerRadius: 0, 
+                                                            additionalRadius: -5, 
+                                                            color: 'gray' 
+                                                        },
                                                     }]}
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="flex items-center justify-center h-[300px] text-gray-500">
+                                            <div className="no-votes-message">
                                                 No votes yet
                                             </div>
                                         )}
