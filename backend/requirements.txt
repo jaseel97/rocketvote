@@ -17,4 +17,5 @@ channels_redis==4.2.0
 msal 
 django-auth-adfs
 jwt
+PyJWT
 

@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
-import jwt
 import requests
 from functools import wraps
 from datetime import datetime
@@ -8,6 +7,8 @@ import json
 import redis
 import os
 import msal
+import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidAudienceError, InvalidIssuerError, InvalidTokenError
 
 class AzureADTokenVerifier:
     def __init__(self):
@@ -78,9 +79,9 @@ class AzureADTokenVerifier:
             kid = header.get('kid')
             if not kid:
                 return False, "No key ID found in token header"
-
+            
             public_key = self.get_key(kid)
-
+            
             # Verify and decode the token
             decoded = jwt.decode(
                 token,
@@ -93,25 +94,25 @@ class AzureADTokenVerifier:
                     'verify_nbf': True,
                 }
             )
-
+            
             expected_issuer = f'https://sts.windows.net/{self.tenant_id}/'
             alt_expected_issuer = f'https://login.microsoftonline.com/{self.tenant_id}/v2.0'
-
+            
             if decoded.get('iss') not in [expected_issuer, alt_expected_issuer]:
                 return False, "Invalid token issuer"
-
+            
             if not decoded.get('sub'):
                 return False, "Missing subject claim"
-
+            
             return True, decoded
-
-        except jwt.ExpiredSignatureError:
+        
+        except ExpiredSignatureError:
             return False, "Token has expired"
-        except jwt.InvalidAudienceError:
+        except InvalidAudienceError:
             return False, "Invalid token audience"
-        except jwt.InvalidIssuerError:
+        except InvalidIssuerError:
             return False, "Invalid token issuer"
-        except jwt.InvalidTokenError as e:
+        except InvalidTokenError as e:
             return False, f"Invalid token: {str(e)}"
         except Exception as e:
             return False, f"Token verification failed: {str(e)}"
