@@ -50,68 +50,72 @@ class AzureADTokenVerifier:
                 return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
         raise ValueError(f'Key ID {kid} not found in JWKS')
 
+    def verify_access(self, token):
+        """Verify if the user has the required role or group access"""
+        is_valid, decoded = self.verify_token(token)
+        if not is_valid:
+            return False, decoded
+
+        required_identifier = settings.ENTRA_APP_ACCESS_IDENTIFIER
+
+        roles = decoded.get('roles', [])
+        if required_identifier in roles:
+            return True, decoded
+
+        groups = decoded.get('groups', [])
+        if required_identifier in groups:
+            return True, decoded
+
+        return False, "User does not have required access"
+
     def verify_token(self, token):
-        """Verify the JWT ID token from Azure AD"""
+        """
+        Verify the Azure AD JWT token
+        Returns (True, decoded_token) if valid, (False, error_message) if invalid
+        """
         try:
             header = jwt.get_unverified_header(token)
-            key = self.get_key(header['kid'])
+            kid = header.get('kid')
+            if not kid:
+                return False, "No key ID found in token header"
 
-            expected_issuer = f'https://login.microsoftonline.com/{self.tenant_id}/v2.0'
+            public_key = self.get_key(kid)
 
+            # Verify and decode the token
             decoded = jwt.decode(
                 token,
-                key=key,
+                key=public_key,
                 algorithms=['RS256'],
                 audience=self.client_id,
-                issuer=expected_issuer,
                 options={
-                    'verify_nbf': True,
                     'verify_exp': True,
-                    'verify_iat': True
+                    'verify_iat': True,
+                    'verify_nbf': True,
                 }
             )
 
-            if 'sub' not in decoded:
-                return False, "Missing 'sub' claim in ID token"
+            expected_issuer = f'https://sts.windows.net/{self.tenant_id}/'
+            alt_expected_issuer = f'https://login.microsoftonline.com/{self.tenant_id}/v2.0'
+
+            if decoded.get('iss') not in [expected_issuer, alt_expected_issuer]:
+                return False, "Invalid token issuer"
+
+            if not decoded.get('sub'):
+                return False, "Missing subject claim"
 
             return True, decoded
 
         except jwt.ExpiredSignatureError:
             return False, "Token has expired"
         except jwt.InvalidAudienceError:
-            return False, "Invalid audience"
+            return False, "Invalid token audience"
         except jwt.InvalidIssuerError:
-            return False, "Invalid issuer"
-        except jwt.InvalidSignatureError:
-            return False, "Invalid signature"
+            return False, "Invalid token issuer"
+        except jwt.InvalidTokenError as e:
+            return False, f"Invalid token: {str(e)}"
         except Exception as e:
-            return False, str(e)
-
-def is_authenticated(view_func):
-    """Decorator to verify Azure AD ID token from cookie"""
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        token = request.COOKIES.get('auth_token')
-        if not token:
-            return HttpResponseForbidden('No token provided')
-
-        verifier = AzureADTokenVerifier()
-        is_valid, result = verifier.verify_token(token)
-
-        if not is_valid:
-            return HttpResponseForbidden(f'Invalid token: {result}')
-
-        request.user = {
-            'name': result.get('name'),
-            'email': result.get('preferred_username'),
-            'object_id': result.get('oid'),
-        }
-
-        request.azure_user = result
-        return view_func(request, *args, **kwargs)
-
-    return wrapper
-
+            return False, f"Token verification failed: {str(e)}"
+        
 def oauth_callback(request):
     code = request.GET.get('code')
     return_path = request.GET.get('state', '/')
@@ -131,18 +135,25 @@ def oauth_callback(request):
 
         if 'error' in result:
             return HttpResponseBadRequest(f"Error acquiring token: {result.get('error_description')}")
-        
-        print("RESULT : ", result)
 
         id_token = result.get('id_token')
-        if not id_token:
-            return HttpResponseBadRequest("No ID token received from Azure AD")
+        access_token = result.get('access_token')
+
+        print("ID TOKEN:", id_token)
+        print("ACCESS TOKEN: ", access_token)
+        
+        if not id_token or not access_token:
+            return HttpResponseBadRequest("Missing required tokens from Azure AD")
 
         verifier = AzureADTokenVerifier()
+        
         is_valid, decoded_token = verifier.verify_token(id_token)
-
         if not is_valid:
-            return HttpResponseBadRequest(f"Token verification failed: {decoded_token}")
+            return HttpResponseBadRequest(f"ID token verification failed: {decoded_token}")
+            
+        has_access, access_result = verifier.verify_access(id_token)
+        if not has_access:
+            return HttpResponseForbidden(f"Access denied: {access_result}")
 
         response = HttpResponseRedirect(return_path)
         response.set_cookie(
@@ -153,29 +164,79 @@ def oauth_callback(request):
             samesite='Lax',
             max_age=3600
         )
-
+        response.set_cookie(
+            'access_token',
+            access_token,
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=3600
+        )
         return response
 
     except Exception as e:
         return HttpResponseBadRequest(f"Authentication failed: {str(e)}")
+    
+
+def is_authenticated(view_func):
+    """Decorator to verify Azure AD tokens and access"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        id_token = request.COOKIES.get('auth_token')
+        access_token = request.COOKIES.get('access_token')
+        
+        if not id_token or not access_token:
+            return HttpResponseForbidden('Missing required tokens')
+
+        verifier = AzureADTokenVerifier()
+        
+        is_valid, result = verifier.verify_token(id_token)
+        if not is_valid:
+            return HttpResponseForbidden(f'Invalid ID token: {result}')
+            
+        has_access, access_result = verifier.verify_access(id_token)
+        if not has_access:
+            return HttpResponseForbidden(f'Access denied: {access_result}')
+
+        request.user = {
+            'name': result.get('name'),
+            'email': result.get('preferred_username'),
+            'object_id': result.get('oid'),
+        }
+        request.azure_user = result
+        request.access_token = access_token
+        
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
 
 def verify_auth(request):
-    if 'auth_token' in request.COOKIES:
-        verifier = AzureADTokenVerifier()
-        is_valid, result = verifier.verify_token(request.COOKIES['auth_token'])
+    id_token = request.COOKIES.get('auth_token')
+    access_token = request.COOKIES.get('access_token')
+    
+    if not id_token or not access_token:
+        return JsonResponse({
+            'authenticated': False,
+            'error': 'Missing required tokens'
+        }, status=401)
 
-        if is_valid:
-            return JsonResponse({
-                'authenticated': True,
-                'user_info': result
-            })
-        else:
-            return JsonResponse({
-                'authenticated': False,
-                'error': result
-            }, status=401)
+    verifier = AzureADTokenVerifier()
+    
+    is_valid, result = verifier.verify_token(id_token)
+    if not is_valid:
+        return JsonResponse({
+            'authenticated': False,
+            'error': result
+        }, status=401)
+        
+    has_access, access_result = verifier.verify_access(id_token)
+    if not has_access:
+        return JsonResponse({
+            'authenticated': False,
+            'error': access_result
+        }, status=403)
 
     return JsonResponse({
-        'authenticated': False,
-        'error': 'No authentication token found'
-    }, status=401)
+        'authenticated': True,
+        'user_info': result
+    })
