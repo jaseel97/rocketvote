@@ -25,7 +25,6 @@ const PollAdmin = () => {
     if (isAuthenticated === null) return <div>Redirecting to login...</div>;
     if (!isAuthenticated) return null;
 
-
     const location = useLocation();
     const { poll_id, redirect_url } = location.state || {};
     const [pollData, setPollData] = useState(null);
