@@ -64,7 +64,6 @@
     from-white to-sky-200;
   }
 
-  /* Button variants */
   .button-variant-green {
     @apply from-white to-green-200 shadow-neumorphic
     dark:from-gray-800 dark:to-green-900/20
@@ -86,7 +85,6 @@
     hover:border-sky-500/50 dark:hover:border-sky-400/50;
   }
 
-  /* Form inputs */
   .input-base {
     @apply block px-2.5 pb-2.5 pt-4 w-full text-sm
     text-gray-900 dark:text-white
