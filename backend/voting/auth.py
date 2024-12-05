@@ -162,7 +162,7 @@ def oauth_callback(request):
             httponly=True,
             secure=True,
             samesite='Lax',
-            max_age=3600
+            max_age=3600*24
         )
         response.set_cookie(
             'access_token',
@@ -170,7 +170,7 @@ def oauth_callback(request):
             httponly=True,
             secure=True,
             samesite='Lax',
-            max_age=3600
+            max_age=3600*24
         )
         return response
 
