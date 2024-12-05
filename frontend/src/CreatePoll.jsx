@@ -116,7 +116,7 @@ const CreatePoll = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!validateOptions()) return;
-
+    
         fetch(`${apiDomain}/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -134,13 +134,8 @@ const CreatePoll = () => {
                 return res.json();
             })
             .then((responseData) => {
-                if (responseData.redirect_url) {
-                    navigate(`/create/${responseData.poll_id}`, {
-                        state: {
-                            poll_id: responseData.poll_id,
-                            redirect_url: responseData.redirect_url
-                        }
-                    });
+                if (responseData.creation_id && responseData.poll_id) {
+                    navigate(`/${responseData.creation_id}/manage/${responseData.poll_id}`);
                 }
                 setValidationError("");
             })
@@ -149,7 +144,6 @@ const CreatePoll = () => {
                 setValidationError("Failed to create poll. Please try again.");
             });
     };
-
     const handleReset = () => {
         setDescription("");
         setOptions(["", "", "", ""]);

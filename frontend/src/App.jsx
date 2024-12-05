@@ -20,7 +20,7 @@ function App() {
                         <Router>
                             <Routes>
                                 <Route path="/" element={<CreatePoll />} />
-                                <Route path="/create/:pollId" element={<PollAdmin />} />
+                                <Route path="/:creation_id/manage/:poll_id" element={<PollAdmin />} />
                                 <Route path="/:poll_id" element={<VotePoll />} />
                             </Routes>
                         </Router>

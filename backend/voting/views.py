@@ -124,7 +124,7 @@ def create(request):
     return JsonResponse(
         {
             'poll_id': new_poll_id,
-            'redirect_url': f'/create/{creation_id}'
+            'creation_id': creation_id
         },
         status=201
     )

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
 import { useAccessibility } from './AccessibilityContext';
 import { useAuth } from './context/AuthContext';
-
 import CustomPieChart from './PieChart';
 import AnimatedPollOptions from './AnimatedPollOptions';
 
@@ -11,11 +10,20 @@ import {
     appDomain,
     apiDomain,
     wsDomain
-} from "./Config"
+} from "./Config";
 
 const PollAdmin = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
+    const { creation_id, poll_id } = useParams();
     
+    const [pollData, setPollData] = useState(null);
+    const [isPending, setIsPending] = useState(true);
+    const [error, setError] = useState(null);
+    const [isRevealed, setIsRevealed] = useState(false);
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [copySuccess, setCopySuccess] = useState(false);
+    const { settings } = useAccessibility();
+
     useEffect(() => {
         if (isAuthenticated === false) {
             redirectToLogin();
@@ -25,75 +33,63 @@ const PollAdmin = () => {
     if (isAuthenticated === null) return <div>Redirecting to login...</div>;
     if (!isAuthenticated) return null;
 
-    const location = useLocation();
-    const { poll_id, redirect_url } = location.state || {};
-    const [pollData, setPollData] = useState(null);
-    const [isPending, setIsPending] = useState(true);
-    const [error, setError] = useState(null);
-    const [isRevealed, setIsRevealed] = useState(false);
-    const [selectedOption, setSelectedOption] = useState(null);
-    const [copySuccess, setCopySuccess] = useState(false);
-    const { settings } = useAccessibility();
-
-    const fetchPollData = () => {
-        if (!redirect_url) {
-            setError("No redirect URL provided");
+    useEffect(() => {
+        if (!creation_id || !poll_id) {
+            setError("Invalid poll URL");
             setIsPending(false);
             return;
         }
 
-        fetch(`${apiDomain}${redirect_url}`)
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to fetch poll data");
-                return res.json();
-            })
-            .then(data => {
-                setPollData(data);
-                setIsPending(false);
-                setError(null);
-            })
-            .catch(err => {
-                setError(err.message);
-                setIsPending(false);
-            });
-    };
-
-    useEffect(() => {
-        if (!poll_id || !redirect_url) return;
+        const fetchPollData = () => {
+            fetch(`${apiDomain}/create/${creation_id}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch poll data");
+                    return res.json();
+                })
+                .then(data => {
+                    setPollData(data);
+                    setIsPending(false);
+                    setError(null);
+                })
+                .catch(err => {
+                    setError(err.message);
+                    setIsPending(false);
+                });
+        };
 
         fetchPollData();
         const ws = new WebSocket(`${wsDomain}/${poll_id}/`);
-    
+
         ws.onopen = () => {
             console.log('WebSocket Connected');
         };
-    
+
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.results_revealed) {
-                setRevealed(true);
+                setIsRevealed(true);
                 fetchPollData();
             }
             if (data.vote_cast) {
                 fetchPollData();
             }
         };
-    
+
         ws.onerror = (error) => {
             console.error('WebSocket Error:', error);
             setError('WebSocket connection error');
         };
-    
+
         ws.onclose = () => {
             console.log('WebSocket Disconnected');
         };
-    
+
         return () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.close();
             }
         };
-    }, [poll_id, redirect_url]);
+    }, [creation_id, poll_id]);
 
     const handleCopy = async () => {
         try {
@@ -106,7 +102,7 @@ const PollAdmin = () => {
     };
 
     const handleReveal = () => {
-        fetch(`${apiDomain}${redirect_url}`, {
+        fetch(`${apiDomain}/create/${creation_id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ revealed: "1" })
@@ -173,7 +169,7 @@ const PollAdmin = () => {
                             <input
                                 type="text"
                                 id="poll-url"
-                                value={`${appDomain}/${poll_id || pollId}`}
+                                value={`${appDomain}/${poll_id}`}
                                 readOnly
                                 placeholder=" "
                                 className="input-base hover:text-lg focus:text-lg peer"
@@ -182,7 +178,7 @@ const PollAdmin = () => {
                                 htmlFor="poll-url"
                                 className="label-base"
                             >
-                                Poll URL
+                                Poll Link
                             </label>
                         </div>
                         <button
