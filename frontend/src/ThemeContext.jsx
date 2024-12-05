@@ -15,7 +15,6 @@ const useTheme = () => {
 
 const ThemeProvider = ({ children }) => {
     const [darkMode, setDarkMode] = useState(() => {
-        // Check localStorage first, then system preference
         const saved = localStorage.getItem('darkMode');
         if (saved !== null) {
             return JSON.parse(saved);

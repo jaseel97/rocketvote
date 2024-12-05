@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useAccessibility } from './AccessibilityContext';
 
 const AccessibilityWidget = () => {
@@ -7,7 +6,7 @@ const AccessibilityWidget = () => {
   const { settings, setSettings } = useAccessibility();
 
   const progressStates = {
-    fontSize: ['text-base', 'text-lg', 'text-xl'],
+    fontSize: ['text-base', 'text-big', 'text-bigger'],
     fontFamily: ['font-sans', 'font-serif', 'font-mono'],
     fontStyle: ['font-normal', 'italic', 'font-bold']
   };

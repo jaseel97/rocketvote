@@ -8,7 +8,6 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      // Preserve existing animations
       keyframes: {
         wiggle: {
           '0%, 100%': { transform: 'rotate(-5deg)' },
@@ -20,8 +19,8 @@ export default {
       },
       fontSize: {
         'base': '1rem', 
-        'lg': '1.5rem',   
-        'xl': '2rem',
+        'big': '1.5rem',   
+        'bigger': '2rem',
       },
       fontFamily: {
         'sans': ['Doto', 'ui-serif', 'Georgia', 'Cambria'],
@@ -40,7 +39,6 @@ export default {
           fontWeight: 'bold'
         }
       },
-      // Add custom colors for consistency
       colors: {
         primary: {
           50: '#fff1f2',
@@ -48,7 +46,7 @@ export default {
           200: '#fecdd3',
           300: '#fda4af',
           400: '#fb7185',
-          500: '#f43f5e',  // Base red color
+          500: '#f43f5e', 
           600: '#e11d48',
           700: '#be123c',
           800: '#9f1239',
@@ -56,15 +54,12 @@ export default {
           950: '#4c0519',
         },
       },
-      // Add transitions for smooth theme switching
       transitionProperty: {
         'colors': 'background-color, border-color, color, fill, stroke',
       },
-      // Add custom timing functions
       transitionTimingFunction: {
         'theme': 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
-      // Add custom durations
       transitionDuration: {
         'theme': '200ms',
       },
