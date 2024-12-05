@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import { useAccessibility } from './AccessibilityContext';
-import CustomPieChart from './PieChart';
 import { useAuth } from './context/AuthContext';
+import CustomPieChart from './PieChart';
 import AnimatedPollOptions from './AnimatedPollOptions';
 
 import {
@@ -19,10 +19,61 @@ const CheckMark = () => (
     <span className="mr-2 text-lg">✓</span>
 );
 
+const MultiSelectionIndicator = () => (
+    <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+        <div className="flex items-center">
+            <span className="mr-2">☑️</span>
+            <p className="font-medium text-blue-700 dark:text-blue-300">
+                You can select multiple options for this question.
+            </p>
+        </div>
+    </div>
+);
+
+const AnonymityIndicator = ({ isAnonymous }) => (
+    <div className={`
+        mb-4 p-4 rounded-lg 
+        ${isAnonymous === "1" 
+            ? "bg-green-100/50 dark:bg-green-900/50 border-2 border-green-500/30 dark:border-green-400/30"
+            : "bg-yellow-100/50 dark:bg-yellow-900/50 border-2 border-yellow-500/30 dark:border-yellow-400/30"
+        }
+    `}>
+        <div className="flex items-center">
+            <span className="mr-2">
+                {isAnonymous === "1" ? "🔒" : "👥"}
+            </span>
+            <p className={`
+                font-medium
+                ${isAnonymous === "1"
+                    ? "text-green-700 dark:text-green-300"
+                    : "text-yellow-700 dark:text-yellow-300"
+                }
+            `}>
+                {isAnonymous === "1"
+                    ? "This is an anonymous poll. Your identity will be hidden from other participants and the organizer."
+                    : "This is not an anonymous poll. The organizer will be able to see your choices."
+                }
+            </p>
+        </div>
+    </div>
+);
+
 const VotePoll = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
+    const { poll_id } = useParams();
+    const { settings } = useAccessibility();
 
-    
+    const [pollData, setPollData] = useState(null);
+    const [isPending, setIsPending] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedOptions, setSelectedOptions] = useState({});
+    const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
+    const [revealed, setRevealed] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState('idle');
+    const [hoveredOption, setHoveredOption] = useState(null);
+    const [socket, setSocket] = useState(null);
+    const [selectedResultOption, setSelectedResultOption] = useState({});
+
     useEffect(() => {
         if (isAuthenticated === false) {
             redirectToLogin();
@@ -31,30 +82,6 @@ const VotePoll = () => {
 
     if (isAuthenticated === null) return <div>Redirecting to login...</div>;
     if (!isAuthenticated) return null;
-
-    const { poll_id } = useParams();
-    const [pollData, setPollData] = useState(null);
-    const [isPending, setIsPending] = useState(true);
-    const [error, setError] = useState(null);
-    const [selectedOptions, setSelectedOptions] = useState({});
-    const [revealed, setRevealed] = useState(false);
-    const [submitStatus, setSubmitStatus] = useState('idle');
-    const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
-    const [hoveredOption, setHoveredOption] = useState(null);
-    const [socket, setSocket] = useState(null);
-    const { settings } = useAccessibility();
-    const [selectedResultOption, setSelectedResultOption] = useState(null);
-
-    const MultiSelectionIndicator = () => (
-        <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
-            <div className="flex items-center">
-                <span className="mr-2">☑️</span>
-                <p className="font-medium text-blue-700 dark:text-blue-300">
-                    You can select multiple options in this poll.
-                </p>
-            </div>
-        </div>
-    );
 
     useEffect(() => {
         if (!poll_id) return;
@@ -66,10 +93,14 @@ const VotePoll = () => {
         };
 
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.results_revealed) {
-                setRevealed(true);
-                fetchPollData();
+            try {
+                const data = JSON.parse(event.data);
+                if (data.results_revealed) {
+                    setRevealed(true);
+                    fetchPollData();
+                }
+            } catch (error) {
+                console.error('WebSocket message error:', error);
             }
         };
 
@@ -92,17 +123,18 @@ const VotePoll = () => {
     }, [poll_id]);
 
     const fetchPollData = async () => {
+        setIsPending(true);
         try {
             const response = await fetch(`${apiDomain}/${poll_id}`);
             if (!response.ok) throw new Error('Failed to fetch poll data');
             const data = await response.json();
             setPollData(data);
-            setIsPending(false);
-            if (data.metadata.revealed === "1") {
+            if (data.metadata?.revealed === "1") {
                 setRevealed(true);
             }
         } catch (err) {
             setError(err.message);
+        } finally {
             setIsPending(false);
         }
     };
@@ -113,44 +145,68 @@ const VotePoll = () => {
         }
     }, [poll_id]);
 
-    const handleOptionChange = (index, value) => {
-        if (pollData.metadata.multi_selection === "1") {
-            setSelectedOptions(prev => ({
-                ...prev,
-                [index]: !prev[index],
-            }));
-        } else {
-            setSelectedOptions({
-                [index]: true,
-            });
-        }
+    const hasChangedSelection = () => {
+        if (!selectedOptions || !lastSubmittedOptions) return true;
+        
+        const questionIndices = Object.keys(selectedOptions);
+        const lastSubmittedIndices = Object.keys(lastSubmittedOptions);
+        
+        if (questionIndices.length !== lastSubmittedIndices.length) return true;
+        
+        return questionIndices.some(questionIndex => {
+            const currentQuestion = selectedOptions[questionIndex] || {};
+            const lastSubmitted = lastSubmittedOptions[questionIndex] || {};
+            
+            const selectedIndices = Object.keys(currentQuestion).filter(key => currentQuestion[key]);
+            const lastSubmittedIndices = Object.keys(lastSubmitted).filter(key => lastSubmitted[key]);
+            
+            if (selectedIndices.length !== lastSubmittedIndices.length) return true;
+            return selectedIndices.some(index => !lastSubmitted[index]);
+        });
+    };
+
+    const handleOptionChange = (questionIndex, optionIndex, option) => {
+        setSelectedOptions(prevSelectedOptions => {
+            const newSelectedOptions = {...prevSelectedOptions};
+            if (!newSelectedOptions[questionIndex]) {
+                newSelectedOptions[questionIndex] = {};
+            }
+            
+            if (pollData.metadata.questions[questionIndex].multi_selection === "1") {
+                newSelectedOptions[questionIndex] = {
+                    ...newSelectedOptions[questionIndex],
+                    [optionIndex]: !newSelectedOptions[questionIndex][optionIndex]
+                };
+            } else {
+                newSelectedOptions[questionIndex] = {
+                    [optionIndex]: true
+                };
+            }
+            return newSelectedOptions;
+        });
+        
         if (submitStatus === 'submitted') {
             setSubmitStatus('idle');
         }
     };
-    const hasChangedSelection = () => {
-        const selectedIndices = Object.keys(selectedOptions).filter(key => selectedOptions[key]);
-        const lastSubmittedIndices = Object.keys(lastSubmittedOptions).filter(key => lastSubmittedOptions[key]);
-
-        if (selectedIndices.length !== lastSubmittedIndices.length) return true;
-        return selectedIndices.some(index => !lastSubmittedOptions[index]);
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
-        const hasSelection = Object.values(selectedOptions).some(value => value);
-        if (!hasSelection) return;
-    
+
+        const hasSelections = pollData.metadata.questions.every((_, index) => {
+            const questionOptions = selectedOptions[index] || {};
+            return Object.values(questionOptions).some(value => value);
+        });
+        
+        if (!hasSelections) return;
+
         setSubmitStatus('submitting');
-    
-        const votes = Object.keys(selectedOptions)
-            .filter(index => selectedOptions[index])
-            .map(index => pollData.metadata.options[index]);
-    
-        const data = {
-            votes: votes
-        };
+
+        const questions = pollData.metadata.questions.map((_, questionIndex) => ({
+            votes: Object.keys(selectedOptions[questionIndex] || {})
+                .filter(optionIndex => selectedOptions[questionIndex][optionIndex])
+                .map(optionIndex => pollData.metadata.questions[questionIndex].options[optionIndex])
+        }));
 
         try {
             const response = await fetch(`${apiDomain}/${poll_id}`, {
@@ -158,7 +214,7 @@ const VotePoll = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ questions })
             });
 
             if (!response.ok) {
@@ -166,7 +222,7 @@ const VotePoll = () => {
             }
 
             setSubmitStatus('submitted');
-            setLastSubmittedOptions({ ...selectedOptions });
+            setLastSubmittedOptions({...selectedOptions});
             await fetchPollData();
         } catch (error) {
             console.error("Error submitting vote:", error);
@@ -174,40 +230,15 @@ const VotePoll = () => {
         }
     };
 
-    const AnonymityIndicator = () => (
-        <div className={`
-            mb-4 p-4 rounded-lg 
-            ${pollData.metadata.anonymous === "1" 
-                ? "bg-green-100/50 dark:bg-green-900/50 border-2 border-green-500/30 dark:border-green-400/30"
-                : "bg-yellow-100/50 dark:bg-yellow-900/50 border-2 border-yellow-500/30 dark:border-yellow-400/30"
-            }
-        `}>
-            <div className="flex items-center">
-                <span className="mr-2">
-                    {pollData.metadata.anonymous === "1" 
-                        ? "🔒" 
-                        : "👥"
-                    }
-                </span>
-                <p className={`
-                    font-medium
-                    ${pollData.metadata.anonymous === "1"
-                        ? "text-green-700 dark:text-green-300"
-                        : "text-yellow-700 dark:text-yellow-300"
-                    }
-                `}>
-                    {pollData.metadata.anonymous === "1"
-                        ? "This is an anonymous poll. Your identity will be hidden from other participants and the organizer."
-                        : "This is not an anonymous poll. The organizer will be able to see your choices."
-                    }
-                </p>
-            </div>
-        </div>
-    );
-
     const getSubmitButtonContent = () => {
-        const hasSelection = Object.values(selectedOptions).some(value => value);
-        const canSubmit = hasSelection && (submitStatus !== 'submitted' || hasChangedSelection());
+        if (!pollData?.metadata?.questions) return 'Select an option for all questions';
+
+        const hasSelections = pollData.metadata.questions.every((_, index) => {
+            const questionOptions = selectedOptions[index] || {};
+            return Object.values(questionOptions).some(value => value);
+        });
+        
+        const canSubmit = hasSelections && (submitStatus !== 'submitted' || hasChangedSelection());
 
         if (submitStatus === 'submitting') {
             return (
@@ -227,18 +258,29 @@ const VotePoll = () => {
             );
         }
 
-        return canSubmit ? 'Submit Vote' : 'Select an option';
+        return canSubmit ? 'Submit Vote' : 'Select an option for all questions';
     };
 
-    const optionCardClasses = (index) => `
-    relative overflow-hidden
-    w-full cursor-pointer 
-    rounded-2xl
-    bg-gradient-to-r from-gray-50 to-gray-100
-    dark:from-gray-800 dark:to-gray-750
-    border-2
-    transition-all duration-300 ease-in-out
-    ${selectedOptions[index] || hoveredOption === index
+    const getVotersForOption = (questionIndex, option) => {
+        if (!pollData?.results) return [];
+        
+        const questionResults = pollData.results[questionIndex];
+        if (!questionResults?.votes) return [];
+
+        return Object.entries(questionResults.votes)
+            .filter(([_, selectedOptions]) => selectedOptions.includes(option))
+            .map(([voterId]) => voterId);
+    };
+
+    const optionCardClasses = (questionIndex, optionIndex) => `
+        relative overflow-hidden
+        w-full cursor-pointer 
+        rounded-2xl
+        bg-gradient-to-r from-gray-50 to-gray-100
+        dark:from-gray-800 dark:to-gray-750
+        border-2
+        transition-all duration-300 ease-in-out
+        ${selectedOptions[questionIndex]?.[optionIndex] || hoveredOption === `${questionIndex}-${optionIndex}`
             ? `
                 text-zinc-700 dark:text-zinc-300
                 border-zinc-500/50 dark:border-zinc-400/50
@@ -254,191 +296,188 @@ const VotePoll = () => {
                 scale-100
             `
         }
-`;
+    `;
 
-const renderResults = () => {
-    const { description, options } = pollData.metadata;
-    const counts = pollData.counts || {};
-    const allCounts = { ...counts };
-    
-    options.forEach(option => {
-        if (!(option in allCounts)) {
-            allCounts[option] = 0;
+    const renderResults = () => {
+        if (!pollData?.metadata?.questions) {
+            return <div>No poll data available</div>;
         }
-    });
-    
-    const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
-    const userVotes = options.filter((option, index) => lastSubmittedOptions[index]);
-    
-    const pieData = options.map((option) => ({
-        id: option,
-        label: option,
-        value: Number(counts[option] || 0)
-    }));
 
-    const getVotersForOption = () => [];
-    
-    return (
-        <div className="poll-inner-container">
-            <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>Poll Results</h2>
-            
-            <div className="relative mb-6">
-                <textarea
-                    value={description}
-                    readOnly
-                    placeholder=" "
-                    className="input-base resize-none hover:text-lg focus:text-lg peer"
-                    rows="3"
-                />
-                <label className="label-base">
-                    Description/Question
-                </label>
-            </div>
-    
-            {userVotes.length > 0 && (
-                <div className="mb-6 p-4 rounded-lg bg-sky-100/50 dark:bg-sky-900/50 border-2 border-sky-500/30 dark:border-sky-400/30">
-                    <h2 className={`${settings.fontSize === 'text-bigger' ? 'text-xl' : settings.fontSize === 'text-bigger' ? 'text-xl' : 'text-lg'} font-medium text-sky-700 dark:text-sky-300 mb-2`}>You voted for:</h2>
-                    <ul className="list-disc list-inside space-y-1">
-                        {userVotes.map((vote, index) => (
-                            <li key={index} className="text-sky-600 dark:text-sky-400">
-                                {vote}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+        return (
+            <div className="poll-inner-container">
+                <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>
+                    Poll Results
+                </h2>
+                
+                {pollData.metadata.questions.map((question, questionIndex) => {
+                    const questionResults = pollData.results?.[questionIndex];
+                    const voteCounts = questionResults?.counts || {};
 
-            <div className="poll-section-container">
-                <div className="poll-section-inner">
-                    <div className="two-column-layout">
-                        <div className="column">
-                            <div className="relative isolate">
-                                <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Overview</h2>
-                                
-                                <AnimatedPollOptions 
-                                    options={options}
-                                    counts={counts}
-                                    selectedOption={selectedResultOption}
-                                    setSelectedOption={setSelectedResultOption}
-                                    getVotersForOption={getVotersForOption}
-                                    isAnonymous={true}
+                    return (
+                        <div key={questionIndex} className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                            <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
+
+                            <div className="relative mb-6">
+                                <textarea
+                                    value={question.description}
+                                    readOnly
+                                    placeholder=" "
+                                    className="input-base resize-none hover:text-lg focus:text-lg peer"
+                                    rows="3"
                                 />
                             </div>
-                        </div>
 
-                        <div className="column">
-                            <div className="relative isolate">
-                                <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Visual Breakdown</h2>
-                                <div className="chart-container">
-                                    {totalVotes > 0 ? (
-                                        <CustomPieChart series={[{
-                                            data: pieData,
-                                            highlightScope: { fade: 'global', highlight: 'item' },
-                                            faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
-                                        }]} />
-                                    ) : (
-                                        <div className="flex items-center justify-center h-[300px] text-gray-500">
-                                            No votes yet
-                                        </div>
-                                    )}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white`}>
+                                        Options Overview
+                                    </h4>
+                                    <AnimatedPollOptions 
+                                        options={question.options}
+                                        counts={voteCounts}
+                                        selectedOption={selectedResultOption[questionIndex]}
+                                        setSelectedOption={(option) => {
+                                            setSelectedResultOption(prev => ({
+                                                ...prev,
+                                                [questionIndex]: option
+                                            }));
+                                        }}
+                                        getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
+                                        isAnonymous={pollData.metadata.anonymous === "1"}
+                                    />
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
 
-    if (isPending) return (
-        <div className={`
-            poll-dashboard-container
-            ${settings.fontSize}
-            ${settings.fontFamily}
-            ${settings.fontStyle}
-        `}>
-            <p className="loading-message">Loading poll data...</p>
-        </div>
-    );
-
-    if (error) return (
-        <div className={`
-    poll-dashboard-container
-            ${settings.fontSize}
-            ${settings.fontFamily}
-            ${settings.fontStyle}
-        `}>
-            <p className="error-message">Error: {error}</p>
-        </div>
-    );
-
-    if (revealed || pollData?.metadata?.revealed === "1") {
-        return (
-            <div className={`
-                poll-dashboard-container
-                ${settings.fontSize}
-                ${settings.fontFamily}
-                ${settings.fontStyle}
-            `}>
-                {renderResults()}
-            </div>
-        );
-    }
-
-    return (
-        <div className={`
-            poll-dashboard-container
-            ${settings.fontSize}
-            ${settings.fontFamily}
-            ${settings.fontStyle}
-        `}>
-            <div className="poll-inner-container">
-                <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>
-                    {pollData?.metadata?.description}
-                </h2>
-    
-                {pollData && <AnonymityIndicator />}
-                {pollData?.metadata?.multi_selection === "1" && <MultiSelectionIndicator />}
-    
-                <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                        {pollData?.metadata?.options.map((option, index) => (
-                            <div
-                                key={index}
-                                className={optionCardClasses(index)}
-                                onClick={() => handleOptionChange(index, option)}
-                                onMouseEnter={() => setHoveredOption(index)}
-                                onMouseLeave={() => setHoveredOption(null)}
-                            >
-                                <div className="relative z-10 p-4">
-                                    <div className="flex items-center">
-                                        <input
-                                            type={pollData.metadata.multi_selection === "1" ? "checkbox" : "radio"}
-                                            name="poll-option"
-                                            checked={selectedOptions[index] || false}
-                                            onChange={() => { }}
-                                            className="mr-3 w-5 h-5"
-                                        />
-                                        <span className="font-medium">{option}</span>
+                                <div className="space-y-4">
+                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white`}>
+                                        Visual Breakdown
+                                    </h4>
+                                    <div>
+                                        {Object.values(voteCounts).some(count => count > 0) ? (
+                                            <CustomPieChart
+                                                series={[{
+                                                    data: question.options.map(option => ({
+                                                        id: option,
+                                                        label: option,
+                                                        value: Number(voteCounts[option] || 0)
+                                                    })),
+                                                    highlightScope: {
+                                                        fade: 'global',
+                                                        highlight: 'item'
+                                                    },
+                                                    faded: {
+                                                        innerRadius: 0,
+                                                        additionalRadius: -5,
+                                                        color: 'gray'
+                                                    },
+                                                }]}
+                                            />
+                                        ) : (
+                                            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                                No votes yet
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10" />
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    );
+                })}
+            </div>
 
-                    <button
-                        type="submit"
-                        disabled={submitStatus === 'submitting'}
-                        className="button-variant-sky w-full"
-                    >
-                        <span className="relative z-10">{getSubmitButtonContent()}</span>
-                    </button>
-                </form>
+);
+};
+
+if (isPending) return (
+    <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+        <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+            <p className="text-center text-gray-300">Loading poll data...</p>
+        </div>
+    </div>
+);
+
+if (error) return (
+    <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+        <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+            <p className="text-center text-red-500">Error: {error}</p>
+        </div>
+    </div>
+);
+
+if (revealed || pollData?.metadata?.revealed === "1") {
+    return (
+        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+            <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+                {renderResults()}
             </div>
         </div>
     );
+}
+
+return (
+    <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+        <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+            <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-white mb-4`}>
+                Cast Your Vote
+            </h2>
+
+            {pollData && <AnonymityIndicator isAnonymous={pollData.metadata.anonymous} />}
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {pollData?.metadata?.questions.map((question, questionIndex) => (
+                    <div key={questionIndex} className="mb-8 p-6 bg-gray-800 rounded-lg shadow-sm">
+                        <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
+
+                        <div className="relative mb-6">
+                            <textarea
+                                value={question.description}
+                                readOnly
+                                placeholder=" "
+                                rows="3"
+                                className="input-base resize-none hover:text-lg focus:text-lg peer"
+                            />
+                        </div>
+
+                        {question.multi_selection === "1" && <MultiSelectionIndicator />}
+
+                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                            {question.options.map((option, optionIndex) => (
+                                <div
+                                    key={optionIndex}
+                                    className={optionCardClasses(questionIndex, optionIndex)}
+                                    onClick={() => handleOptionChange(questionIndex, optionIndex, option)}
+                                    onMouseEnter={() => setHoveredOption(`${questionIndex}-${optionIndex}`)}
+                                    onMouseLeave={() => setHoveredOption(null)}
+                                >
+                                    <div className="relative z-10 p-4">
+                                        <div className="flex items-center">
+                                            <input
+                                                type={question.multi_selection === "1" ? "checkbox" : "radio"}
+                                                name={`poll-option-${questionIndex}`}
+                                                checked={selectedOptions[questionIndex]?.[optionIndex] || false}
+                                                onChange={() => {}}
+                                                className="mr-3 w-5 h-5"
+                                            />
+                                            <span className="font-medium">{option}</span>
+                                        </div>
+                                    </div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+
+                <button
+                    type="submit"
+                    disabled={submitStatus === 'submitting'}
+                    className="end-button end-button-sky w-full"
+                >
+                    {getSubmitButtonContent()}
+                </button>
+            </form>
+        </div>
+    </div>
+);
 };
 
 export default VotePoll;

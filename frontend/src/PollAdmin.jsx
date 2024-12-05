@@ -15,6 +15,15 @@ import {
 
 const PollAdmin = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
+    const location = useLocation();
+    const { poll_id, redirect_url } = location.state || {};
+    const [pollData, setPollData] = useState(null);
+    const [isPending, setIsPending] = useState(true);
+    const [error, setError] = useState(null);
+    const [isRevealed, setIsRevealed] = useState(false);
+    const [selectedOptions, setSelectedOptions] = useState({});
+    const [copySuccess, setCopySuccess] = useState(false);
+    const { settings } = useAccessibility();
     
     useEffect(() => {
         if (isAuthenticated === false) {
@@ -24,16 +33,6 @@ const PollAdmin = () => {
 
     if (isAuthenticated === null) return <div>Redirecting to login...</div>;
     if (!isAuthenticated) return null;
-
-    const location = useLocation();
-    const { poll_id, redirect_url } = location.state || {};
-    const [pollData, setPollData] = useState(null);
-    const [isPending, setIsPending] = useState(true);
-    const [error, setError] = useState(null);
-    const [isRevealed, setIsRevealed] = useState(false);
-    const [selectedOption, setSelectedOption] = useState(null);
-    const [copySuccess, setCopySuccess] = useState(false);
-    const { settings } = useAccessibility();
 
     const fetchPollData = () => {
         if (!redirect_url) {
@@ -51,6 +50,7 @@ const PollAdmin = () => {
                 setPollData(data);
                 setIsPending(false);
                 setError(null);
+                setIsRevealed(data.metadata.revealed === "1");
             })
             .catch(err => {
                 setError(err.message);
@@ -88,9 +88,9 @@ const PollAdmin = () => {
             .catch((err) => console.error("Error revealing poll:", err));
     };
 
-    const getVotersForOption = (option) => {
-        if (!pollData?.votes) return [];
-        return Object.entries(pollData.votes)
+    const getVotersForOption = (questionIndex, option) => {
+        if (!pollData?.results?.[questionIndex]?.votes) return [];
+        return Object.entries(pollData.results[questionIndex].votes)
             .filter(([_, votes]) => votes.includes(option))
             .map(([voter]) => voter);
     };
@@ -113,50 +113,38 @@ const PollAdmin = () => {
         </div>
     );
 
-    const { description, options } = pollData.metadata;
-    const counts = pollData.counts || {};
-
-    const totalVotes = options
-        .map(option => Number(counts[option] || 0))
-        .reduce((sum, count) => sum + count, 0);
-
-    const chartData = options.map((option) => ({
-        id: option,
-        label: option,
-        value: Number(counts[option] || 0)
-    }));
-
     return (
         <div className={`
-            poll-dashboard-container
+            min-h-screen max-w-full 
+            bg-[#ECEFF1] dark:bg-[#0A0A0A]
+            flex justify-center p-4
             ${settings.fontSize}
             ${settings.fontFamily}
             ${settings.fontStyle}
         `}>
-            <div className="poll-dashboard-inner">
-                <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>Voting Dashboard</h2>
+            <div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+                <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>
+                    Voting Dashboard
+                </h2>
 
                 <div className="mb-6">
-                    <div className="flex-container">
+                    <div className="flex gap-4 items-center">
                         <div className="relative flex-1">
                             <input
                                 type="text"
                                 id="poll-url"
-                                value={`${appDomain}/${poll_id || pollId}`}
+                                value={`${appDomain}/${poll_id}`}
                                 readOnly
                                 placeholder=" "
                                 className="input-base hover:text-lg focus:text-lg peer"
                             />
-                            <label
-                                htmlFor="poll-url"
-                                className="label-base"
-                            >
+                            <label htmlFor="poll-url" className="label-base">
                                 Poll URL
                             </label>
                         </div>
-                        <button
-                            onClick={handleCopy}
-                            className="button-variant-sky"
+                        <button 
+                            onClick={handleCopy} 
+                            className="button-variant-sky whitespace-nowrap"
                         >
                             <span className="relative z-10">
                                 {copySuccess ? 'Copied!' : 'Copy URL'}
@@ -165,93 +153,78 @@ const PollAdmin = () => {
                     </div>
                 </div>
 
-                <div className="relative mb-6">
-                    <textarea
-                        id="description"
-                        value={description}
-                        readOnly
-                        placeholder=" "
-                        rows="3"
-                        className="input-base resize-none hover:text-lg focus:text-lg peer"
-                    ></textarea>
-                    <label
-                        htmlFor="description"
-                        className="label-base"
-                    >
-                        Description/Question
-                    </label>
-                </div>
+                {pollData.metadata.questions.map((question, questionIndex) => (
+                    <div key={questionIndex} className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
 
-                <div className="poll-section-container">
-                    <div className="poll-section-inner">
-                        <div className="two-column-layout">
-                            <div className="column">
-                                <div className="relative isolate">
-                                    <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Overview</h2>
+                        <div className="relative mb-6">
+                            <textarea
+                                value={question.description}
+                                readOnly
+                                placeholder=" "
+                                rows="3"
+                                className="input-base resize-none hover:text-lg focus:text-lg peer"
+                            ></textarea>
+                        </div>
 
-                                    {pollData.metadata.anonymous === "1" && (
-                                        <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
-                                            <div className="flex items-center">
-                                                <span className="mr-2">🔒</span>
-                                                <p className="font-medium text-blue-700 dark:text-blue-300">
-                                                    This is an anonymous poll. Voter identities are hidden.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <AnimatedPollOptions
-                                        options={options}
-                                        counts={counts}
-                                        selectedOption={selectedOption}
-                                        setSelectedOption={setSelectedOption}
-                                        getVotersForOption={getVotersForOption}
-                                        isAnonymous={pollData.metadata.anonymous === "1"}
-                                    />
-
-                                    <div className="mt-6">
-                                        {!isRevealed ? (
-                                            <button
-                                                onClick={handleReveal}
-                                                className="reveal-button"
-                                            >
-                                                <span className="relative z-10">Reveal Poll Results</span>
-                                            </button>
-                                        ) : (
-                                            <button
-                                                disabled
-                                                className="revealed-button"
-                                            >
-                                                <span className="relative z-10">Results Revealed</span>
-                                            </button>
-                                        )}
+                        <div className="space-y-6">
+                            {pollData.metadata.anonymous === "1" && (
+                                <div className="p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+                                    <div className="flex items-center">
+                                        <span className="mr-2">🔒</span>
+                                        <p className="font-medium text-blue-700 dark:text-blue-300">
+                                            This is an anonymous poll. Voter identities are hidden.
+                                        </p>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="column">
-                                <div className="relative isolate">
-                                    <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Visual Breakdown</h2>
-                                    <div className="chart-container">
-                                        {totalVotes > 0 ? (
-                                            <div className="relative isolate">
-                                                <CustomPieChart
-                                                    series={[{
-                                                        data: chartData,
-                                                        highlightScope: {
-                                                            fade: 'global',
-                                                            highlight: 'item'
-                                                        },
-                                                        faded: {
-                                                            innerRadius: 0,
-                                                            additionalRadius: -5,
-                                                            color: 'gray'
-                                                        },
-                                                    }]}
-                                                />
-                                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
+                                        Options Overview
+                                    </h4>
+                                    <AnimatedPollOptions
+                                        options={question.options}
+                                        counts={pollData.results[questionIndex]?.counts || {}}
+                                        selectedOption={selectedOptions[questionIndex]}
+                                        setSelectedOption={(option) => {
+                                            setSelectedOptions(prev => ({
+                                                ...prev,
+                                                [questionIndex]: option
+                                            }));
+                                        }}
+                                        getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
+                                        isAnonymous={pollData.metadata.anonymous === "1"}
+                                    />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
+                                        Visual Breakdown
+                                    </h4>
+                                    <div>
+                                        {Object.values(pollData.results[questionIndex]?.counts || {}).some(count => count > 0) ? (
+                                            <CustomPieChart
+                                                series={[{
+                                                    data: question.options.map(option => ({
+                                                        id: option,
+                                                        label: option,
+                                                        value: Number(pollData.results[questionIndex]?.counts?.[option] || 0)
+                                                    })),
+                                                    highlightScope: {
+                                                        fade: 'global',
+                                                        highlight: 'item'
+                                                    },
+                                                    faded: {
+                                                        innerRadius: 0,
+                                                        additionalRadius: -5,
+                                                        color: 'gray'
+                                                    },
+                                                }]}
+                                            />
                                         ) : (
-                                            <div className="no-votes-message">
+                                            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
                                                 No votes yet
                                             </div>
                                         )}
@@ -260,6 +233,24 @@ const PollAdmin = () => {
                             </div>
                         </div>
                     </div>
+                ))}
+
+                <div className="mt-6">
+                    {!isRevealed ? (
+                        <button
+                            onClick={handleReveal}
+                            className="end-button end-button-green w-full"
+                        >
+                            <span className="relative z-10">Reveal Poll Results</span>
+                        </button>
+                    ) : (
+                        <button
+                            disabled
+                            className="w-full"
+                        >
+                            <span className="relative z-10">Results Revealed</span>
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
