@@ -103,7 +103,7 @@ const UsernameModal = ({ username, setUsername, onSubmit }) => {
                             required
                         />
                         <label className={modalLabelClasses}>
-                            Enter username to continue
+                            Enter display name to continue
                         </label>
                     </div>
                     <button
@@ -142,19 +142,39 @@ const VotePoll = () => {
     const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
     const [hoveredOption, setHoveredOption] = useState(null);
     const [socket, setSocket] = useState(null);
+    const [userDetails, setUserDetails] = useState(null);
+
+    const fetchUserDetails = async () => {
+        try {
+            const response = await fetch(`${apiDomain}/auth/user`);
+            if (!response.ok) throw new Error('Failed to fetch user details');
+            const data = await response.json();
+            setUserDetails(data);
+            setUsername(data.name);
+            setShowUsernameModal(false);
+        } catch (err) {
+            console.error('Error fetching user details:', err);
+        }
+    };
 
     useEffect(() => {
-        const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
-        const savedPollId = localStorage.getItem(POLL_ID_STORAGE_KEY);
-
-        if (savedUsername && savedPollId === poll_id) {
-            setUsername(savedUsername);
-            setShowUsernameModal(false);
+        if (!pollData) return;
+    
+        if (pollData.metadata.anonymous === "1") {
+            const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
+            const savedPollId = localStorage.getItem(POLL_ID_STORAGE_KEY);
+    
+            if (savedUsername && savedPollId === poll_id) {
+                setUsername(savedUsername);
+                setShowUsernameModal(false);
+            } else {
+                setShowUsernameModal(true);
+                setUsername('');
+            }
         } else {
-            setShowUsernameModal(true);
-            setUsername('');
+            fetchUserDetails();
         }
-    }, [poll_id]);
+    }, [poll_id, pollData]);
 
     useEffect(() => {
         if (!poll_id) return;
@@ -248,18 +268,18 @@ const VotePoll = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         const hasSelection = Object.values(selectedOptions).some(value => value);
         if (!hasSelection) return;
-
+    
         setSubmitStatus('submitting');
-
+    
         const votes = Object.keys(selectedOptions)
             .filter(index => selectedOptions[index])
             .map(index => pollData.metadata.options[index]);
-
+    
         const data = {
-            voter: username,
+            voter: pollData.metadata.anonymous === "1" ? username : userDetails.name,
             votes: votes
         };
 
