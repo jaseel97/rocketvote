@@ -334,6 +334,7 @@ const CreatePoll = () => {
 
                                     <button
                                         type="button"
+                                        aria-label={`Add option after option ${index + 1}`}
                                         className={`group button-neumorphic button-variant-green ${isAtMaxOptions ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         onClick={() => handleAddOption(index)}
                                         disabled={isAtMaxOptions}
@@ -343,6 +344,7 @@ const CreatePoll = () => {
 
                                     <button
                                         type="button"
+                                        aria-label={`Delete option ${index + 1}`}
                                         className={`group button-neumorphic button-variant-red ${isAtMinOptions ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         onClick={() => handleDeleteOption(index)}
                                         disabled={isAtMinOptions}
