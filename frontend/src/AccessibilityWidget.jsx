@@ -38,14 +38,27 @@ const AccessibilityWidget = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 left-4 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+        className="fixed bottom-4 left-4 p-2 rounded-lg z-50 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200 shadow-lg"
         aria-label="Accessibility Options"
       >
-        <ChevronDownIcon className="w-6 h-6" />
+         <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth={1.5} 
+                    stroke="currentColor" 
+                    className="w-6 h-6"
+                >
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" 
+                    />
+                </svg>
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-16 left-4 max-w-sm bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+        <div className="fixed bottom-16 left-4 max-w-sm z-50 bg-white dark:bg-gray-500 rounded-lg shadow-lg p-4">
           <div className="grid grid-cols-3 gap-4 mb-4">
             {[
               { setting: 'fontSize', icon: 'TT', label: 'Font Size' },

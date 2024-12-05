@@ -230,7 +230,10 @@ const CreatePoll = () => {
                         </div>
 
                         {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
-                        {isPending && <p className="text-gray-600 dark:text-gray-300">Loading templates...</p>}
+{isPending && <p className="text-gray-600 dark:text-gray-300">Loading templates...</p>}
+{!isPending && !error && (!filteredTemplates || filteredTemplates.length === 0) && (
+    <p className="mb-32 text-lg text-center text-gray-600 dark:text-white">No Saved Templates</p>
+)}
 
                         <div className="grid gap-4 mt-4 grid-cols-3">
                             {filteredTemplates.map((template) => (

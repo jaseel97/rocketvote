@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,jsx,}",
   ],
-  // Enable class-based dark mode
+
   darkMode: 'class',
   theme: {
     extend: {
@@ -24,9 +24,9 @@ export default {
         'xl': '2rem',
       },
       fontFamily: {
-        'serif': ['ui-sans-serif', 'system-ui', 'sans-serif'],
-        'sans': ['ui-serif', 'Georgia', 'Cambria'],
-        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo']
+        'sans': ['Doto', 'ui-serif', 'Georgia', 'Cambria'],
+        'serif': ['"Noto Sans"', 'system-ui', 'sans-serif'],
+        'mono': ['"Faculty Glyphic"', 'SFMono-Regular', 'Menlo']
       },
       fontStyle: {
         'default': {
