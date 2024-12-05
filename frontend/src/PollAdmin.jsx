@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-
+import { useAccessibility } from './AccessibilityContext';
 import { useAuth } from './context/AuthContext';
 
 import CustomPieChart from './PieChart';
@@ -15,7 +15,7 @@ import {
 
 const PollAdmin = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
-
+    
     useEffect(() => {
         if (isAuthenticated === false) {
             redirectToLogin();
@@ -34,7 +34,7 @@ const PollAdmin = () => {
     const [isRevealed, setIsRevealed] = useState(false);
     const [selectedOption, setSelectedOption] = useState(null);
     const [copySuccess, setCopySuccess] = useState(false);
-    const [hoveredOption, setHoveredOption] = useState(null);
+    const { settings } = useAccessibility();
 
     const fetchPollData = () => {
         if (!redirect_url) {
@@ -128,9 +128,14 @@ const PollAdmin = () => {
     }));
 
     return (
-        <div className="poll-dashboard-container">
+        <div className={`
+            poll-dashboard-container
+            ${settings.fontSize}
+            ${settings.fontFamily}
+            ${settings.fontStyle}
+        `}>
             <div className="poll-dashboard-inner">
-                <h2 className="poll-heading">Voting Dashboard</h2>
+                <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>Voting Dashboard</h2>
 
                 <div className="mb-6">
                     <div className="flex-container">
@@ -141,12 +146,11 @@ const PollAdmin = () => {
                                 value={`${appDomain}/${poll_id || pollId}`}
                                 readOnly
                                 placeholder=" "
-                                className="input-base hover:text-lg focus:text-lg"
+                                className="input-base hover:text-lg focus:text-lg peer"
                             />
                             <label
                                 htmlFor="poll-url"
-                                className="label-base hover:text-red-600 dark:hover:text-red-400 
-                     focus:text-red-600 dark:focus:text-red-400"
+                                className="label-base"
                             >
                                 Poll URL
                             </label>
@@ -169,12 +173,11 @@ const PollAdmin = () => {
                         readOnly
                         placeholder=" "
                         rows="3"
-                        className="input-base resize-none hover:text-lg focus:text-lg"
+                        className="input-base resize-none hover:text-lg focus:text-lg peer"
                     ></textarea>
                     <label
                         htmlFor="description"
-                        className="textarea-label hover:text-red-600 dark:hover:text-red-400 
-                 focus:text-red-600 dark:focus:text-red-400"
+                        className="label-base"
                     >
                         Description/Question
                     </label>
@@ -185,7 +188,7 @@ const PollAdmin = () => {
                         <div className="two-column-layout">
                             <div className="column">
                                 <div className="relative isolate">
-                                    <h3 className="poll-subheading">Overview</h3>
+                                    <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Overview</h2>
 
                                     {pollData.metadata.anonymous === "1" && (
                                         <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
@@ -229,7 +232,7 @@ const PollAdmin = () => {
 
                             <div className="column">
                                 <div className="relative isolate">
-                                    <h3 className="poll-subheading">Visual Breakdown</h3>
+                                    <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Visual Breakdown</h2>
                                     <div className="chart-container">
                                         {totalVotes > 0 ? (
                                             <div className="relative isolate">

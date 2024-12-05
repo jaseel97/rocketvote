@@ -86,7 +86,7 @@
   }
 
   .input-base {
-    @apply block px-2.5 pb-2.5 pt-4 w-full text-sm
+    @apply block px-2.5 pb-2.5 pt-4 w-full text-lg
     text-gray-900 dark:text-white
     bg-gray-50 dark:bg-gray-600
     border-0 border-b-2 border-gray-300 dark:border-gray-500
@@ -95,28 +95,36 @@
     focus:bg-gray-50 dark:focus:bg-gray-700
     hover:border-red-500 dark:hover:border-red-400
     hover:bg-gray-50 dark:hover:bg-gray-700
-    transition-all duration-300;
+    transition-all duration-300
+    overflow-hidden;
   }
 
   .label-base {
-    @apply absolute text-sm text-gray-800 dark:text-gray-400
-    duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0]
-    bg-transparent px-2 left-1 peer-focus:px-2 peer-hover:px-2
-    peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2
-    peer-placeholder-shown:top-1/2 peer-focus:top-0 peer-hover:top-0
-    peer-focus:scale-75 peer-hover:scale-75
+    @apply absolute text-lg text-gray-800 dark:text-gray-400
+    duration-300 transform -translate-y-4 top-2 z-10 origin-[0]
+    bg-transparent px-2 left-1 
+    peer-focus:scale-90 peer-hover:scale-90
+    peer-placeholder-shown:-translate-y-1/2
+    peer-placeholder-shown:top-1/2 
+    peer-[:not(:placeholder-shown)]:text-red-400
+    peer-[:not(:placeholder-shown)]:-translate-y-4
+    peer-[:not(:placeholder-shown)]:-top-1
+    peer-focus:px-2 peer-hover:px-2
+    peer-focus:-top-1 peer-hover:top-0
     peer-focus:-translate-y-4 peer-hover:-translate-y-4
-    peer-focus:text-red-500 peer-hover:text-red-500
+    peer-focus:text-red-400 peer-hover:text-red-400
     dark:peer-focus:text-red-400 dark:peer-hover:text-red-400
-    peer-focus:font-medium peer-hover:font-medium;
-  }
+    peer-focus:font-medium peer-hover:font-medium
+    ;
+}
 
-  .textarea-label {
-    @apply label-base peer-placeholder-shown:top-6
-    peer-focus:top-0 peer-hover:top-0
-    peer-focus:-translate-y-4 peer-hover:-translate-y-4
-    peer-focus:scale-75 peer-hover:scale-75;
-  }
+.textarea-label {
+  @apply label-base peer-placeholder-shown:top-6
+  peer-focus:-top-1
+  peer-hover:scale-90
+peer-hover:-top-1
+peer-hover:-translate-y-4;
+}
 
   .delete-icon-button {
     @apply absolute -top-3 -right-3 z-20 p-1.5 rounded-full
@@ -158,13 +166,6 @@
     @apply w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-2 rounded-md;
   }
 
-  .poll-heading {
-    @apply text-2xl text-center font-bold text-gray-900 dark:text-white mb-6;
-  }
-
-  .poll-subheading {
-    @apply text-xl font-bold text-gray-900 dark:text-white mb-4 text-center;
-  }
 
   .chart-container { @apply bg-transparent rounded-2xl p-6 shadow-neumorphic; }
   .flex-container { @apply flex gap-4; }

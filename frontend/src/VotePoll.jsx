@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
-
+import { useAccessibility } from './AccessibilityContext';
 import CustomPieChart from './PieChart';
 import { useAuth } from './context/AuthContext';
+import AnimatedPollOptions from './AnimatedPollOptions';
 
 import {
     appDomain,
@@ -20,6 +21,7 @@ const CheckMark = () => (
 
 const VotePoll = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
+
     
     useEffect(() => {
         if (isAuthenticated === false) {
@@ -40,6 +42,8 @@ const VotePoll = () => {
     const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
     const [hoveredOption, setHoveredOption] = useState(null);
     const [socket, setSocket] = useState(null);
+    const { settings } = useAccessibility();
+    const [selectedResultOption, setSelectedResultOption] = useState(null);
 
     const MultiSelectionIndicator = () => (
         <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
@@ -226,72 +230,6 @@ const VotePoll = () => {
         return canSubmit ? 'Submit Vote' : 'Select an option';
     };
 
-    const submitButtonClasses = `
-        px-8 py-3 rounded-2xl 
-        relative overflow-hidden
-        bg-gradient-to-r from-gray-50 to-gray-100
-        dark:from-gray-800 dark:to-gray-750
-        font-medium
-        border-2
-        text-sky-500 dark:text-sky-400
-        border-sky-500/30 dark:border-sky-400/30
-        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(14,165,233,0.2)]
-        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(56,189,248,0.2)]
-        before:absolute before:inset-0
-        before:bg-gradient-to-r
-        before:from-sky-500/0 before:via-sky-500/10 before:to-sky-500/0
-        before:translate-x-[-200%]
-        hover:before:translate-x-[200%]
-        before:transition-transform before:duration-1000
-        hover:border-sky-500/50 dark:hover:border-sky-400/50
-        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(14,165,233,0.3)]
-        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(56,189,248,0.3)]
-        transition-all duration-300 ease-in-out
-        w-full mt-6
-    `;
-
-    const textareaClasses = `
-    block px-2.5 pb-2.5 pt-6 w-full 
-    text-base font-medium
-    text-gray-900 dark:text-white 
-    bg-gray-100 dark:bg-gray-600 
-    border-0 border-b-2 border-gray-300 dark:border-gray-500
-    rounded-t-lg 
-    appearance-none 
-    focus:outline-none 
-    focus:border-red-500 dark:focus:border-red-400 
-    focus:bg-gray-50 dark:focus:bg-gray-700
-    hover:border-red-500 dark:hover:border-red-400 
-    hover:bg-gray-50 dark:hover:bg-gray-700
-    hover:text-lg
-    focus:text-lg
-    not-placeholder-shown:bg-gray-50 dark:not-placeholder-shown:bg-gray-700
-    not-placeholder-shown:border-red-500 dark:not-placeholder-shown:border-red-400
-    peer 
-    transition-all duration-300
-    resize-none
-`;
-
-    const descriptionLabelClasses = `
-    absolute text-xs
-    text-red-500 dark:text-red-400 
-    duration-300 transform 
-    top-2 left-2.5
-    z-10 origin-[0] 
-    bg-transparent
-    px-0
-    font-normal
-    hover:font-medium
-    focus:font-medium
-    peer-hover:font-medium
-    peer-focus:font-medium
-    peer-[&:not(:placeholder-shown)]:font-medium
-    peer-hover:top-1
-    peer-focus:top-1
-    peer-[&:not(:placeholder-shown)]:top-1
-    transition-all duration-300
-`;
-
     const optionCardClasses = (index) => `
     relative overflow-hidden
     w-full cursor-pointer 
@@ -318,98 +256,145 @@ const VotePoll = () => {
         }
 `;
 
-    const renderResults = () => {
-        const { description, options } = pollData.metadata;
-        const counts = pollData.counts || {};
-        const allCounts = { ...counts };
+const renderResults = () => {
+    const { description, options } = pollData.metadata;
+    const counts = pollData.counts || {};
+    const allCounts = { ...counts };
     
-        options.forEach(option => {
-            if (!(option in allCounts)) {
-                allCounts[option] = 0;
-            }
-        });
+    options.forEach(option => {
+        if (!(option in allCounts)) {
+            allCounts[option] = 0;
+        }
+    });
     
-        const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
+    const totalVotes = Object.values(allCounts).reduce((sum, count) => sum + Number(count), 0);
+    const userVotes = options.filter((option, index) => lastSubmittedOptions[index]);
     
-        const userVotes = options.filter((option, index) => lastSubmittedOptions[index]);
+    const pieData = options.map((option) => ({
+        id: option,
+        label: option,
+        value: Number(counts[option] || 0)
+    }));
+
+    const getVotersForOption = () => [];
     
-        const pieData = options.map((option) => ({
-            id: option,
-            label: option,
-            value: Number(counts[option] || 0)
-        }));
+    return (
+        <div className="poll-inner-container">
+            <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>Poll Results</h2>
+            
+            <div className="relative mb-6">
+                <textarea
+                    value={description}
+                    readOnly
+                    placeholder=" "
+                    className="input-base resize-none hover:text-lg focus:text-lg peer"
+                    rows="3"
+                />
+                <label className="label-base">
+                    Description/Question
+                </label>
+            </div>
     
-        return (
-            <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Poll Results</h2>
-                
-                <div className="relative mb-6">
-                    <textarea
-                        value={description}
-                        readOnly
-                        placeholder=" "
-                        className={textareaClasses}
-                        rows="3"
-                    />
-                    <label className={descriptionLabelClasses}>
-                        Description/Question
-                    </label>
+            {userVotes.length > 0 && (
+                <div className="mb-6 p-4 rounded-lg bg-sky-100/50 dark:bg-sky-900/50 border-2 border-sky-500/30 dark:border-sky-400/30">
+                    <h2 className={`${settings.fontSize === 'text-bigger' ? 'text-xl' : settings.fontSize === 'text-bigger' ? 'text-xl' : 'text-lg'} font-medium text-sky-700 dark:text-sky-300 mb-2`}>You voted for:</h2>
+                    <ul className="list-disc list-inside space-y-1">
+                        {userVotes.map((vote, index) => (
+                            <li key={index} className="text-sky-600 dark:text-sky-400">
+                                {vote}
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-    
-                {userVotes.length > 0 && (
-                    <div className="mb-6 p-4 rounded-lg bg-sky-100/50 dark:bg-sky-900/50 border-2 border-sky-500/30 dark:border-sky-400/30">
-                        <h3 className="text-lg font-medium text-sky-700 dark:text-sky-300 mb-2">You voted for:</h3>
-                        <ul className="list-disc list-inside space-y-1">
-                            {userVotes.map((vote, index) => (
-                                <li key={index} className="text-sky-600 dark:text-sky-400">
-                                    {vote}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-    
-                <div className="bg-transparent rounded-2xl p-6 shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9)] dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1)]">
-                    {totalVotes > 0 ? (
-                        <CustomPieChart series={[{
-                            data: pieData,
-                            highlightScope: { fade: 'global', highlight: 'item' },
-                            faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
-                        }]} />
-                    ) : (
-                        <div className="flex items-center justify-center h-[300px] text-gray-500">
-                            No votes yet
+            )}
+
+            <div className="poll-section-container">
+                <div className="poll-section-inner">
+                    <div className="two-column-layout">
+                        <div className="column">
+                            <div className="relative isolate">
+                                <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Overview</h2>
+                                
+                                <AnimatedPollOptions 
+                                    options={options}
+                                    counts={counts}
+                                    selectedOption={selectedResultOption}
+                                    setSelectedOption={setSelectedResultOption}
+                                    getVotersForOption={getVotersForOption}
+                                    isAnonymous={true}
+                                />
+                            </div>
                         </div>
-                    )}
+
+                        <div className="column">
+                            <div className="relative isolate">
+                                <h2 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white mb-4`}>Visual Breakdown</h2>
+                                <div className="chart-container">
+                                    {totalVotes > 0 ? (
+                                        <CustomPieChart series={[{
+                                            data: pieData,
+                                            highlightScope: { fade: 'global', highlight: 'item' },
+                                            faded: { innerRadius: 0, additionalRadius: -5, color: 'gray' },
+                                        }]} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-[300px] text-gray-500">
+                                            No votes yet
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        );
-    };
+        </div>
+    );
+};
 
     if (isPending) return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
-            <p className="text-gray-900 dark:text-white">Loading poll data...</p>
+        <div className={`
+            poll-dashboard-container
+            ${settings.fontSize}
+            ${settings.fontFamily}
+            ${settings.fontStyle}
+        `}>
+            <p className="loading-message">Loading poll data...</p>
         </div>
     );
 
     if (error) return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center">
-            <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+        <div className={`
+    poll-dashboard-container
+            ${settings.fontSize}
+            ${settings.fontFamily}
+            ${settings.fontStyle}
+        `}>
+            <p className="error-message">Error: {error}</p>
         </div>
     );
 
     if (revealed || pollData?.metadata?.revealed === "1") {
         return (
-            <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
+            <div className={`
+                poll-dashboard-container
+                ${settings.fontSize}
+                ${settings.fontFamily}
+                ${settings.fontStyle}
+            `}>
                 {renderResults()}
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className={`
+            poll-dashboard-container
+            ${settings.fontSize}
+            ${settings.fontFamily}
+            ${settings.fontStyle}
+        `}>
+            <div className="poll-inner-container">
+                <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>
                     {pollData?.metadata?.description}
                 </h2>
     
@@ -446,7 +431,7 @@ const VotePoll = () => {
                     <button
                         type="submit"
                         disabled={submitStatus === 'submitting'}
-                        className={submitButtonClasses}
+                        className="button-variant-sky w-full"
                     >
                         <span className="relative z-10">{getSubmitButtonContent()}</span>
                     </button>

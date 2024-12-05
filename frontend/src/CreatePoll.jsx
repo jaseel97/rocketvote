@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 import useFetch from "./useFetch";
 import { useTheme } from './ThemeContext';
 import { useAuth } from './context/AuthContext';
-
 import { StyledToggle } from './StyledToggle'
-
 import { useAccessibility } from './AccessibilityContext';
 import {
     PlusCircleIcon as PlusCircleOutline,
@@ -211,7 +208,7 @@ const CreatePoll = () => {
             <div className="w-full bg-[#DEE4E7] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
                 <div className="flex flex-col md:flex-row">
                     <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
-                        <h2 className={`${settings.fontSize === 'text-lg' ? 'text-4xl' : settings.fontSize === 'text-xl' ? 'text-5xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>Poll Templates</h2>
+                        <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>Poll Templates</h2>
                         <div className="relative">
                             <input
                                 type="text"
@@ -276,7 +273,7 @@ const CreatePoll = () => {
                     </div>
 
                     <div className="w-full md:w-1/2">
-                        <h2 className={`${settings.fontSize === 'text-lg' ? 'text-4xl' : settings.fontSize === 'text-xl' ? 'text-5xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>Create Poll</h2>
+                        <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-4`}>Create Poll</h2>
 
                         {validationError && (
                             <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
@@ -314,12 +311,12 @@ const CreatePoll = () => {
                                 </label>
                             </div>
 
-                            <label className="block font-semibold mb-4 text-gray-900 dark:text-white">
+                            <label className="block text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                                 Options
                             </label>
 
                             {options.map((option, index) => (
-                                <div key={index} className="flex items-center mb-4">
+                                <div key={index} className="flex items-center mb-6">
                                     <div className="relative flex-grow">
                                         <textarea
                                             id={`option-${index}`}
