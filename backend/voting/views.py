@@ -1,3 +1,4 @@
+import hashlib
 import os
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -130,12 +131,14 @@ def create(request):
 
 @csrf_exempt
 @is_authenticated
+@csrf_exempt 
+@is_authenticated
 def cast_vote(request, poll_id):
     if request.method not in ['PATCH', 'GET']:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
-
+    
     redis_conn = get_redis_connection()
-
+    
     if request.method == 'GET':
         poll = get_poll(redis_conn, poll_id)
         if poll is None:
@@ -144,7 +147,7 @@ def cast_vote(request, poll_id):
             poll_results = get_poll_results(redis_conn, poll_id)
             response = {
                 'metadata': poll,
-                'counts' : poll_results[1]
+                'counts': poll_results[1]
             }
             return JsonResponse(response, status=200)
         else:
@@ -152,6 +155,7 @@ def cast_vote(request, poll_id):
                 'metadata': poll,
             }
             return JsonResponse(response, status=200)
+
     elif request.method == 'PATCH':
         try:
             poll = get_poll(redis_conn, poll_id)
@@ -159,7 +163,7 @@ def cast_vote(request, poll_id):
                 return JsonResponse({'error': 'Poll Expired/Ended'}, status=400)
         except:
             return JsonResponse({'error':'An unexpected error has occurred'}, status=500)
-
+        
         try:
             ballot = json.loads(request.body)
         except json.JSONDecodeError:
@@ -167,36 +171,38 @@ def cast_vote(request, poll_id):
         
         if poll['multi_selection'] == '0' and len(ballot['votes'])>1:
             return JsonResponse({'error': 'Only one option can be chosen for this poll'}, status=400)
-
+        
         if not all(field in poll['options'] for field in ballot['votes']):
             return JsonResponse({'error': 'Invalid option'}, status=400)
-
+        
         if len(ballot['votes']) != len(set(ballot['votes'])):
             return JsonResponse({'error': 'Duplicate votes are not allowed'}, status=400)
 
-        if 'voter' not in ballot:
-            return JsonResponse({'error': 'Missing username'}, status=400)
-
         poll_votes_key = f'{poll_id}:votes'
         poll_count_key = f'{poll_id}:count'
+        
+        if poll['anonymous'] == '1':
+            user_email = request.user['email']
+            voter_id = hashlib.sha256(f"{user_email}:{poll_id}".encode()).hexdigest()
+        else:
+            voter_id = request.user['email']
 
-        voter_name = ballot['voter']
         new_votes = '-:-'.join(ballot['votes'])
-
+        
         try:
-            prev_votes = redis_conn.hget(poll_votes_key, voter_name)
+            prev_votes = redis_conn.hget(poll_votes_key, voter_id)
             if prev_votes:
                 prev_votes = prev_votes.decode('utf-8').split('-:-')
                 for option in prev_votes:
                     redis_conn.zincrby(poll_count_key, -1, option)
-
-            redis_conn.hset(poll_votes_key, voter_name, new_votes)
-
+            
+            redis_conn.hset(poll_votes_key, voter_id, new_votes)
+            
             for option in ballot['votes']:
                 redis_conn.zincrby(poll_count_key, 1, option)
         except Exception as e:
             return JsonResponse({'error': f'Failed to save poll data: {str(e)}'}, status=500)
-
+        
         return JsonResponse({'message': 'Vote/s cast successfully'}, status=200)
 
 @csrf_exempt

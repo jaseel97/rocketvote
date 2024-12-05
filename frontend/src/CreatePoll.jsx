@@ -43,6 +43,9 @@ const CreatePoll = () => {
     const navigate = useNavigate();
     const { settings } = useAccessibility();
 
+    const isAtMaxOptions = options.length >= 15;
+    const isAtMinOptions = options.length <= 2;
+
     const { data: templates, isPending, error } = useFetch(`${apiDomain}/templates?_${triggerFetch}`);
 
     const validateOptions = () => {
@@ -126,6 +129,7 @@ const CreatePoll = () => {
                 options,
                 revealed: 0,
                 multi_selection: multiSelection ? 1 : 0,
+                anonymous: anonymous ? 1 : 0
             }),
         })
             .then((res) => {
@@ -161,15 +165,22 @@ const CreatePoll = () => {
         setTemplateTitle("");
     };
     const handleAddOption = (index) => {
+        if (isAtMaxOptions) {
+            setValidationError("Maximum 15 options are allowed.");
+            return;
+        }
         const updatedOptions = [...options];
         updatedOptions.splice(index + 1, 0, "");
         setOptions(updatedOptions);
     };
 
+
     const handleDeleteOption = (index) => {
-        if (options.length > 1) {
-            setOptions(options.filter((_, i) => i !== index));
+        if (isAtMinOptions) {
+            setValidationError("Minimum 2 options are required.");
+            return;
         }
+        setOptions(options.filter((_, i) => i !== index));
     };
 
     const handleOptionChange = (index, value) => {
@@ -323,19 +334,20 @@ const CreatePoll = () => {
 
                                     <button
                                         type="button"
-                                        className="group button-neumorphic button-variant-green"
+                                        className={`group button-neumorphic button-variant-green ${isAtMaxOptions ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         onClick={() => handleAddOption(index)}
+                                        disabled={isAtMaxOptions}
                                     >
-                                        <PlusCircleOutline className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                                        <PlusCircleOutline className={`w-6 h-6 ${isAtMaxOptions ? 'opacity-50' : 'group-hover:rotate-90'} transition-transform duration-300`} />
                                     </button>
 
                                     <button
                                         type="button"
-                                        className="group button-neumorphic button-variant-red"
+                                        className={`group button-neumorphic button-variant-red ${isAtMinOptions ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         onClick={() => handleDeleteOption(index)}
-                                        disabled={options.length === 1}
+                                        disabled={isAtMinOptions}
                                     >
-                                        <TrashOutline className="w-6 h-6 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
+                                        <TrashOutline className={`w-6 h-6 ${isAtMinOptions ? 'opacity-50' : 'group-hover:scale-110 group-hover:animate-wiggle'} transition-transform duration-300`} />
                                     </button>
                                 </div>
                             ))}

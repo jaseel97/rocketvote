@@ -10,9 +10,6 @@ import {
     wsDomain
 } from "./Config"
 
-const USERNAME_STORAGE_KEY = 'poll_username';
-const POLL_ID_STORAGE_KEY = 'last_poll_id';
-
 const LoadingSpinner = () => (
     <div className="inline-block h-5 w-5 mr-2 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
 );
@@ -20,104 +17,7 @@ const LoadingSpinner = () => (
 const CheckMark = () => (
     <span className="mr-2 text-lg">✓</span>
 );
-const UsernameModal = ({ username, setUsername, onSubmit }) => {
-    const modalSubmitButtonClasses = `
-        px-8 py-3 rounded-2xl 
-        relative overflow-hidden
-        bg-gradient-to-r from-gray-50 to-gray-100
-        dark:from-gray-800 dark:to-gray-750
-        font-medium
-        border-2
-        text-sky-500 dark:text-sky-400
-        border-sky-500/30 dark:border-sky-400/30
-        shadow-[4px_4px_10px_0_rgba(0,0,0,0.1),-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_10px_rgba(14,165,233,0.2)]
-        dark:shadow-[4px_4px_10px_0_rgba(0,0,0,0.3),-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_10px_rgba(56,189,248,0.2)]
-        before:absolute before:inset-0
-        before:bg-gradient-to-r
-        before:from-sky-500/0 before:via-sky-500/10 before:to-sky-500/0
-        before:translate-x-[-200%]
-        hover:before:translate-x-[200%]
-        before:transition-transform before:duration-1000
-        hover:border-sky-500/50 dark:hover:border-sky-400/50
-        hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.1),inset_-4px_-4px_10px_0_rgba(255,255,255,0.9),0_0_15px_rgba(14,165,233,0.3)]
-        dark:hover:shadow-[inset_4px_4px_10px_0_rgba(0,0,0,0.3),inset_-4px_-4px_10px_0_rgba(255,255,255,0.1),0_0_15px_rgba(56,189,248,0.3)]
-        transition-all duration-300 ease-in-out
-        w-full
-    `;
 
-    const modalInputClasses = `
-        block px-2.5 pb-2.5 pt-4 w-full text-sm 
-        text-gray-900 dark:text-white 
-        bg-gray-100 dark:bg-gray-600 
-        border-0 border-b-2 border-gray-300 dark:border-gray-500
-        rounded-t-lg 
-        appearance-none 
-        focus:outline-none 
-        focus:border-red-500 dark:focus:border-red-400 
-        focus:bg-gray-50 dark:focus:bg-gray-700
-        hover:border-red-500 dark:hover:border-red-400 
-        hover:bg-gray-50 dark:hover:bg-gray-700
-        peer
-        transition-all duration-300
-    `;
-
-    const modalLabelClasses = `
-        absolute text-sm 
-        text-gray-500 dark:text-gray-400 
-        duration-300 transform 
-        -translate-y-4 scale-75 top-2 
-        z-10 origin-[0] 
-        bg-transparent
-        px-2 
-        peer-focus:px-2 
-        peer-hover:px-2
-        peer-placeholder-shown:scale-100 
-        peer-placeholder-shown:-translate-y-1/2 
-        peer-placeholder-shown:top-1/2 
-        peer-focus:top-2 
-        peer-hover:top-2
-        peer-focus:scale-75 
-        peer-hover:scale-75
-        peer-focus:-translate-y-4 
-        peer-hover:-translate-y-4
-        peer-focus:text-red-500 dark:peer-focus:text-red-400
-        peer-hover:text-red-500 dark:peer-hover:text-red-400
-        peer-[&:not(:placeholder-shown)]:text-red-500 dark:peer-[&:not(:placeholder-shown)]:text-red-400
-        peer-focus:font-medium
-        peer-hover:font-medium
-        peer-[&:not(:placeholder-shown)]:font-medium
-        left-1
-    `;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm" />
-            <div className="relative z-50 bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-lg p-8 w-96 max-w-[90%]">
-                <form onSubmit={onSubmit}>
-                    <div className="relative mb-6">
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className={modalInputClasses}
-                            placeholder=" "
-                            required
-                        />
-                        <label className={modalLabelClasses}>
-                            Enter display name to continue
-                        </label>
-                    </div>
-                    <button
-                        type="submit"
-                        className={modalSubmitButtonClasses}
-                        disabled={!username.trim()}
-                    >
-                        <span className="relative z-10">Continue</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-};
 const VotePoll = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
     
@@ -134,47 +34,12 @@ const VotePoll = () => {
     const [pollData, setPollData] = useState(null);
     const [isPending, setIsPending] = useState(true);
     const [error, setError] = useState(null);
-    const [username, setUsername] = useState("");
     const [selectedOptions, setSelectedOptions] = useState({});
-    const [showUsernameModal, setShowUsernameModal] = useState(true);
     const [revealed, setRevealed] = useState(false);
     const [submitStatus, setSubmitStatus] = useState('idle');
     const [lastSubmittedOptions, setLastSubmittedOptions] = useState({});
     const [hoveredOption, setHoveredOption] = useState(null);
     const [socket, setSocket] = useState(null);
-    const [userDetails, setUserDetails] = useState(null);
-
-    const fetchUserDetails = async () => {
-        try {
-            const response = await fetch(`${apiDomain}/auth/user`);
-            if (!response.ok) throw new Error('Failed to fetch user details');
-            const data = await response.json();
-            setUserDetails(data);
-            setUsername(data.name);
-            setShowUsernameModal(false);
-        } catch (err) {
-            console.error('Error fetching user details:', err);
-        }
-    };
-
-    useEffect(() => {
-        if (!pollData) return;
-    
-        if (pollData.metadata.anonymous === "1") {
-            const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
-            const savedPollId = localStorage.getItem(POLL_ID_STORAGE_KEY);
-    
-            if (savedUsername && savedPollId === poll_id) {
-                setUsername(savedUsername);
-                setShowUsernameModal(false);
-            } else {
-                setShowUsernameModal(true);
-                setUsername('');
-            }
-        } else {
-            fetchUserDetails();
-        }
-    }, [poll_id, pollData]);
 
     useEffect(() => {
         if (!poll_id) return;
@@ -204,22 +69,12 @@ const VotePoll = () => {
 
         setSocket(ws);
 
-        // Cleanup on unmount
         return () => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.close();
             }
         };
     }, [poll_id]);
-
-    const handleUsernameSubmit = (e) => {
-        e.preventDefault();
-        if (username.trim()) {
-            localStorage.setItem(USERNAME_STORAGE_KEY, username.trim());
-            localStorage.setItem(POLL_ID_STORAGE_KEY, poll_id);
-            setShowUsernameModal(false);
-        }
-    };
 
     const fetchPollData = async () => {
         try {
@@ -279,7 +134,6 @@ const VotePoll = () => {
             .map(index => pollData.metadata.options[index]);
     
         const data = {
-            voter: pollData.metadata.anonymous === "1" ? username : userDetails.name,
             votes: votes
         };
 
@@ -304,6 +158,37 @@ const VotePoll = () => {
             setSubmitStatus('idle');
         }
     };
+
+    const AnonymityIndicator = () => (
+        <div className={`
+            mb-4 p-4 rounded-lg 
+            ${pollData.metadata.anonymous === "1" 
+                ? "bg-green-100/50 dark:bg-green-900/50 border-2 border-green-500/30 dark:border-green-400/30"
+                : "bg-yellow-100/50 dark:bg-yellow-900/50 border-2 border-yellow-500/30 dark:border-yellow-400/30"
+            }
+        `}>
+            <div className="flex items-center">
+                <span className="mr-2">
+                    {pollData.metadata.anonymous === "1" 
+                        ? "🔒" 
+                        : "👥"
+                    }
+                </span>
+                <p className={`
+                    font-medium
+                    ${pollData.metadata.anonymous === "1"
+                        ? "text-green-700 dark:text-green-300"
+                        : "text-yellow-700 dark:text-yellow-300"
+                    }
+                `}>
+                    {pollData.metadata.anonymous === "1"
+                        ? "This is an anonymous poll. Your identity will be hidden from other participants and the organizer."
+                        : "This is not an anonymous poll. The organizer will be able to see your choices."
+                    }
+                </p>
+            </div>
+        </div>
+    );
 
     const getSubmitButtonContent = () => {
         const hasSelection = Object.values(selectedOptions).some(value => value);
@@ -513,10 +398,14 @@ const VotePoll = () => {
     return (
         <div className="min-h-screen w-full bg-[#ECEFF1] dark:bg-gray-900 flex items-center justify-center p-4">
             <div className="w-full max-w-6xl bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{pollData?.metadata?.description}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                    {pollData?.metadata?.description}
+                </h2>
+
+                {pollData && <AnonymityIndicator />}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                         {pollData?.metadata?.options.map((option, index) => (
                             <div
                                 key={index}
@@ -551,14 +440,6 @@ const VotePoll = () => {
                     </button>
                 </form>
             </div>
-
-            {showUsernameModal && (
-                <UsernameModal
-                    username={username}
-                    setUsername={setUsername}
-                    onSubmit={handleUsernameSubmit}
-                />
-            )}
         </div>
     );
 };
