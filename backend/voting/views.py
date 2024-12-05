@@ -257,31 +257,3 @@ def get_user_details(request):
     }
     return JsonResponse(user_details)
 
-
-# def oauth_callback(request):
-#     code = request.GET.get('code')
-#     return_path = request.GET.get('state', '/')
-
-#     msal_app = msal.ConfidentialClientApplication(
-#         client_id=settings.MICROSOFT_AUTH['CLIENT_ID'],
-#         client_credential=settings.MICROSOFT_AUTH['CLIENT_SECRET'],
-#         authority=f"https://login.microsoftonline.com/{settings.MICROSOFT_AUTH['TENANT_ID']}"
-#     )
-    
-#     result = msal_app.acquire_token_by_authorization_code(
-#             code, 
-#             scopes=['User.Read'],
-#             redirect_uri="https://rocketvote.com/api/oauth2/callback"
-#         )
-    
-#     response = HttpResponseRedirect(return_path)
-#     response.set_cookie(
-#         'auth_token',
-#         result['access_token'],
-#         httponly=True,
-#         secure=True,
-#         samesite='Lax'
-#     )
-    
-#     return response
-
