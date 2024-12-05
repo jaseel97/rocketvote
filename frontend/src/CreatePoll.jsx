@@ -240,6 +240,7 @@ const CreatePoll = () => {
                                             e.stopPropagation();
                                             handleDeleteTemplate(template.type);
                                         }}
+                                        aria-label={`Delete ${template.type} template`}
                                         className="delete-icon-button"
                                     >
                                         <XMarkOutline className="w-4 h-4 group-hover:scale-110 group-hover:animate-wiggle transition-transform duration-300" />
