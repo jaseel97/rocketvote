@@ -137,9 +137,6 @@ const CreatePoll = () => {
                 return res.json();
             })
             .then((responseData) => {
-                if (responseData.poll_id) {
-                    window.open(`${appDomain}/${responseData.poll_id}`, "_blank");
-                }
                 if (responseData.redirect_url) {
                     navigate(`/create/${responseData.poll_id}`, {
                         state: {
