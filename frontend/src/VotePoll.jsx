@@ -41,6 +41,17 @@ const VotePoll = () => {
     const [hoveredOption, setHoveredOption] = useState(null);
     const [socket, setSocket] = useState(null);
 
+    const MultiSelectionIndicator = () => (
+        <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+            <div className="flex items-center">
+                <span className="mr-2">☑️</span>
+                <p className="font-medium text-blue-700 dark:text-blue-300">
+                    You can select multiple options in this poll.
+                </p>
+            </div>
+        </div>
+    );
+
     useEffect(() => {
         if (!poll_id) return;
 
@@ -401,9 +412,10 @@ const VotePoll = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                     {pollData?.metadata?.description}
                 </h2>
-
+    
                 {pollData && <AnonymityIndicator />}
-
+                {pollData?.metadata?.multi_selection === "1" && <MultiSelectionIndicator />}
+    
                 <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                         {pollData?.metadata?.options.map((option, index) => (

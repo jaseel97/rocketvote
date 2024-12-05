@@ -15,7 +15,7 @@ import {
 
 const PollAdmin = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
-    
+
     useEffect(() => {
         if (isAuthenticated === false) {
             redirectToLogin();
@@ -133,52 +133,52 @@ const PollAdmin = () => {
                 <h2 className="poll-heading">Voting Dashboard</h2>
 
                 <div className="mb-6">
-                <div className="flex-container">
-    <div className="relative flex-1">
-        <input
-            type="text"
-            id="poll-url"
-            value={`${appDomain}/${poll_id || pollId}`}
-            readOnly
-            placeholder=" "
-            className="input-base hover:text-lg focus:text-lg" // Added hover and focus effects
-        />
-        <label
-            htmlFor="poll-url"
-            className="label-base hover:text-red-600 dark:hover:text-red-400 
+                    <div className="flex-container">
+                        <div className="relative flex-1">
+                            <input
+                                type="text"
+                                id="poll-url"
+                                value={`${appDomain}/${poll_id || pollId}`}
+                                readOnly
+                                placeholder=" "
+                                className="input-base hover:text-lg focus:text-lg" // Added hover and focus effects
+                            />
+                            <label
+                                htmlFor="poll-url"
+                                className="label-base hover:text-red-600 dark:hover:text-red-400 
                      focus:text-red-600 dark:focus:text-red-400"
-        >
-            Poll URL
-        </label>
-    </div>
-    <button 
-    onClick={handleCopy} 
-    className="button-variant-sky"
->
-    <span className="relative z-10">
-        {copySuccess ? 'Copied!' : 'Copy URL'}
-    </span>
-</button>
-</div>
+                            >
+                                Poll URL
+                            </label>
+                        </div>
+                        <button
+                            onClick={handleCopy}
+                            className="button-variant-sky"
+                        >
+                            <span className="relative z-10">
+                                {copySuccess ? 'Copied!' : 'Copy URL'}
+                            </span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="relative mb-6">
-    <textarea
-        id="description"
-        value={description}
-        readOnly
-        placeholder=" "
-        rows="3"
-        className="input-base resize-none hover:text-lg focus:text-lg"
-    ></textarea>
-    <label
-        htmlFor="description"
-        className="textarea-label hover:text-red-600 dark:hover:text-red-400 
+                    <textarea
+                        id="description"
+                        value={description}
+                        readOnly
+                        placeholder=" "
+                        rows="3"
+                        className="input-base resize-none hover:text-lg focus:text-lg"
+                    ></textarea>
+                    <label
+                        htmlFor="description"
+                        className="textarea-label hover:text-red-600 dark:hover:text-red-400 
                  focus:text-red-600 dark:focus:text-red-400"
-    >
-        Description/Question
-    </label>
-</div>
+                    >
+                        Description/Question
+                    </label>
+                </div>
 
                 <div className="poll-section-container">
                     <div className="poll-section-inner">
@@ -187,25 +187,37 @@ const PollAdmin = () => {
                                 <div className="relative isolate">
                                     <h3 className="poll-subheading">Overview</h3>
 
+                                    {pollData.metadata.anonymous === "1" && (
+                                        <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+                                            <div className="flex items-center">
+                                                <span className="mr-2">🔒</span>
+                                                <p className="font-medium text-blue-700 dark:text-blue-300">
+                                                    This is an anonymous poll. Voter identities are hidden.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <AnimatedPollOptions
                                         options={options}
                                         counts={counts}
                                         selectedOption={selectedOption}
                                         setSelectedOption={setSelectedOption}
                                         getVotersForOption={getVotersForOption}
+                                        isAnonymous={pollData.metadata.anonymous === "1"}
                                     />
 
                                     <div className="mt-6">
                                         {!isRevealed ? (
-                                            <button 
-                                                onClick={handleReveal} 
+                                            <button
+                                                onClick={handleReveal}
                                                 className="reveal-button"
                                             >
                                                 <span className="relative z-10">Reveal Poll Results</span>
                                             </button>
                                         ) : (
-                                            <button 
-                                                disabled 
+                                            <button
+                                                disabled
                                                 className="revealed-button"
                                             >
                                                 <span className="relative z-10">Results Revealed</span>
@@ -224,14 +236,14 @@ const PollAdmin = () => {
                                                 <CustomPieChart
                                                     series={[{
                                                         data: chartData,
-                                                        highlightScope: { 
-                                                            fade: 'global', 
-                                                            highlight: 'item' 
+                                                        highlightScope: {
+                                                            fade: 'global',
+                                                            highlight: 'item'
                                                         },
-                                                        faded: { 
-                                                            innerRadius: 0, 
-                                                            additionalRadius: -5, 
-                                                            color: 'gray' 
+                                                        faded: {
+                                                            innerRadius: 0,
+                                                            additionalRadius: -5,
+                                                            color: 'gray'
                                                         },
                                                     }]}
                                                 />
