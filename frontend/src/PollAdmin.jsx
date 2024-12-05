@@ -59,10 +59,41 @@ const PollAdmin = () => {
     };
 
     useEffect(() => {
+        if (!poll_id || !redirect_url) return;
+
         fetchPollData();
-        const intervalId = setInterval(fetchPollData, 1000);
-        return () => clearInterval(intervalId);
-    }, [redirect_url]);
+        const ws = new WebSocket(`${wsDomain}/${poll_id}/`);
+    
+        ws.onopen = () => {
+            console.log('WebSocket Connected');
+        };
+    
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.results_revealed) {
+                setRevealed(true);
+                fetchPollData();
+            }
+            if (data.vote_cast) {
+                fetchPollData();
+            }
+        };
+    
+        ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+            setError('WebSocket connection error');
+        };
+    
+        ws.onclose = () => {
+            console.log('WebSocket Disconnected');
+        };
+    
+        return () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+        };
+    }, [poll_id, redirect_url]);
 
     const handleCopy = async () => {
         try {
