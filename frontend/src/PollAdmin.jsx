@@ -141,7 +141,7 @@ const PollAdmin = () => {
                                 value={`${appDomain}/${poll_id || pollId}`}
                                 readOnly
                                 placeholder=" "
-                                className="input-base hover:text-lg focus:text-lg" // Added hover and focus effects
+                                className="input-base hover:text-lg focus:text-lg"
                             />
                             <label
                                 htmlFor="poll-url"
