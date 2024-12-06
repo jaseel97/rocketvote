@@ -251,6 +251,14 @@ def cast_vote(request, poll_id):
 
                 for option in votes:
                     redis_conn.zincrby(poll_count_key, 1, option)
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'poll_{poll_id}',
+                {
+                    'type': 'poll_voted',
+                }
+            )
                     
         except Exception as e:
             return JsonResponse({'error': f'Failed to save poll data: {str(e)}'}, status=500)

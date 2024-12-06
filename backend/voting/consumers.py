@@ -29,4 +29,10 @@ class PollConsumer(AsyncWebsocketConsumer):
             'poll_id': self.poll_id,
             'results_revealed': True
         }))
+        
+    async def poll_voted(self, event):
+        await self.send(text_data=json.dumps({
+            'poll_id': self.poll_id,
+            'vote_cast': True
+        }))
 
