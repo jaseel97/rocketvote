@@ -182,58 +182,61 @@ const PollAdmin = () => {
                         </div>
 
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="space-y-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-4">
                                     <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
                                         Options Overview
                                     </h4>
                                     <AnimatedPollOptions
-                                        options={question.options}
-                                        counts={pollData.results[questionIndex]?.counts || {}}
-                                        selectedOption={selectedOptions[questionIndex]}
-                                        setSelectedOption={(option) => {
-                                            setSelectedOptions(prev => ({
-                                                ...prev,
-                                                [questionIndex]: option
-                                            }));
-                                        }}
-                                        getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
-                                        isAnonymous={pollData.metadata.anonymous === "1"}
-                                    />
+    options={question.options}
+    counts={pollData.results[questionIndex]?.counts || {}}
+    selectedOption={selectedOptions[questionIndex]}
+    setSelectedOption={(option) => {
+        setSelectedOptions(prev => ({
+            ...prev,
+            [questionIndex]: option
+        }));
+    }}
+    isAnonymous={pollData.metadata.anonymous === "1"}
+    getVotersForOption={pollData.metadata.anonymous === "1" ? 
+        () => [] : 
+        (option) => getVotersForOption(questionIndex, option)
+    }
+/>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
-                                        Visual Breakdown
-                                    </h4>
-                                    <div>
-                                        {Object.values(pollData.results[questionIndex]?.counts || {}).some(count => count > 0) ? (
-                                            <CustomPieChart
-                                                series={[{
-                                                    data: question.options.map(option => ({
-                                                        id: option,
-                                                        label: option,
-                                                        value: Number(pollData.results[questionIndex]?.counts?.[option] || 0)
-                                                    })),
-                                                    highlightScope: {
-                                                        fade: 'global',
-                                                        highlight: 'item'
-                                                    },
-                                                    faded: {
-                                                        innerRadius: 0,
-                                                        additionalRadius: -5,
-                                                        color: 'gray'
-                                                    },
-                                                }]}
-                                            />
-                                        ) : (
-                                            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                                No votes yet
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                                <div className="flex flex-col">
+        <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
+            Visual Breakdown
+        </h4>
+        <div className="h-[280px] lg:h-[320px]">
+            {Object.values(pollData.results[questionIndex]?.counts || {}).some(count => count > 0) ? (
+                <CustomPieChart
+                    series={[{
+                        data: question.options.map(option => ({
+                            id: option,
+                            label: option,
+                            value: Number(pollData.results[questionIndex]?.counts?.[option] || 0)
+                        })),
+                        highlightScope: {
+                            fade: 'global',
+                            highlight: 'item'
+                        },
+                        faded: {
+                            innerRadius: 0,
+                            additionalRadius: -5,
+                            color: 'gray'
+                        },
+                    }]}
+                />
+            ) : (
+                <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                    No votes yet
+                </div>
+            )}
+        </div>
+    </div>
+</div>
                         </div>
                     </div>
                 ))}

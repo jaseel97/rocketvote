@@ -24,10 +24,10 @@ const CustomTooltip = ({ active, payload }) => {
     return null;
 };
 
-const CustomPieChart = ({ series, height = 300 }) => {
+const CustomPieChart = ({ series }) => {
     if (!series?.[0]?.data || series[0].data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[18.75em] text-gray-500 text-inherit-size">
+            <div className="flex items-center justify-center h-full text-gray-500 text-inherit-size">
                 No Votes Yet
             </div>
         );
@@ -42,16 +42,17 @@ const CustomPieChart = ({ series, height = 300 }) => {
 
     if (data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[18.75em] text-gray-500 text-inherit-size">
+            <div className="flex items-center justify-center h-full text-gray-500 text-inherit-size">
                 No votes yet
             </div>
         );
     }
 
-    const innerRadius = data.length > 8 ? '20%' : 0;
+    const innerRadius = data.length > 8 ? '30%' : '0%';
+    const outerRadius = data.length > 8 ? '60%' : '70%';
 
     return (
-        <div className="w-full" style={{ height: `${height / 16}em` }}>
+        <div className="w-full h-full">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Pie
@@ -61,7 +62,7 @@ const CustomPieChart = ({ series, height = 300 }) => {
                         labelLine={false}
                         label={props => renderCustomizedLabel({ ...props, data })}
                         innerRadius={innerRadius}
-                        outerRadius="40%"
+                        outerRadius={outerRadius}
                         paddingAngle={2}
                         dataKey="value"
                     >
@@ -78,7 +79,6 @@ const CustomPieChart = ({ series, height = 300 }) => {
         </div>
     );
 };
-
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value, label, index, data }) => {
     const radius = outerRadius * 1.15;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -105,7 +105,5 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
         </text>
     );
 };
-
-
 
 export default CustomPieChart;

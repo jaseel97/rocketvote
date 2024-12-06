@@ -389,7 +389,7 @@ const CreatePoll = () => {
                 </p>
               </div>
             )}
-
+  <div className="max-h-[calc(100vh-12rem)] overflow-y-auto pr-4 [&::-webkit-scrollbar]:w-[0.25em] [&::-webkit-scrollbar-thumb]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
 <form onSubmit={handleSubmit}>
     <div className="relative mb-[1.5em]">
         <input
@@ -559,6 +559,7 @@ const CreatePoll = () => {
     </button>
 </div>
             </form>
+            </div>
           </div>
         </div>
       </div>

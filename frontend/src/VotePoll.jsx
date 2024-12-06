@@ -339,63 +339,63 @@ const VotePoll = () => {
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-[1.5em]">
-                                <div className="space-y-4">
-                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
-                                        Options Overview
-                                    </h4>
-                                    <AnimatedPollOptions
-    options={question.options}
-    counts={pollData.results?.[questionIndex]?.counts || {}}
-    selectedOption={selectedResultOption[questionIndex]}
-    setSelectedOption={(option) => {
-        setSelectedResultOption(prev => ({
-            ...prev,
-            [questionIndex]: option
-        }));
-    }}
-    isAnonymous="1"
-    userVotes={lastSubmittedOptions[questionIndex] ?
-        Object.entries(lastSubmittedOptions[questionIndex])
-            .filter(([_, selected]) => selected)
-            .map(([index]) => question.options[index])
-        : []
-    }
-    getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
-/>
-                                </div>
+    <div className="space-y-4">
+        <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
+            Options Overview
+        </h4>
+        <AnimatedPollOptions
+            options={question.options}
+            counts={pollData.results?.[questionIndex]?.counts || {}}
+            selectedOption={selectedResultOption[questionIndex]}
+            setSelectedOption={(option) => {
+                setSelectedResultOption(prev => ({
+                    ...prev,
+                    [questionIndex]: option
+                }));
+            }}
+            isAnonymous="1"
+            userVotes={lastSubmittedOptions[questionIndex] ?
+                Object.entries(lastSubmittedOptions[questionIndex])
+                    .filter(([_, selected]) => selected)
+                    .map(([index]) => question.options[index])
+                : []
+            }
+            getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
+        />
+    </div>
 
-                                <div className="space-y-4">
-                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
-                                        Visual Breakdown
-                                    </h4>
-                                    <div>
-                                        {Object.values(voteCounts).some(count => count > 0) ? (
-                                            <CustomPieChart
-                                                series={[{
-                                                    data: question.options.map(option => ({
-                                                        id: option,
-                                                        label: option,
-                                                        value: Number(voteCounts[option] || 0)
-                                                    })),
-                                                    highlightScope: {
-                                                        fade: 'global',
-                                                        highlight: 'item'
-                                                    },
-                                                    faded: {
-                                                        innerRadius: 0,
-                                                        additionalRadius: -5,
-                                                        color: 'gray'
-                                                    },
-                                                }]}
-                                            />
-                                        ) : (
-                                            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                                No votes yet
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+    <div className="flex flex-col">
+        <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
+            Visual Breakdown
+        </h4>
+        <div className="h-[280px] lg:h-[320px]">
+            {Object.values(voteCounts).some(count => count > 0) ? (
+                <CustomPieChart
+                    series={[{
+                        data: question.options.map(option => ({
+                            id: option,
+                            label: option,
+                            value: Number(voteCounts[option] || 0)
+                        })),
+                        highlightScope: {
+                            fade: 'global',
+                            highlight: 'item'
+                        },
+                        faded: {
+                            innerRadius: 0,
+                            additionalRadius: -5,
+                            color: 'gray'
+                        },
+                    }]}
+                />
+            ) : (
+                <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                    No votes yet
+                </div>
+            )}
+        </div>
+    </div>
+</div>
                         </div>
                     );
                 })}
@@ -405,16 +405,16 @@ const VotePoll = () => {
     };
 
     if (isPending) return (
-        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-            <div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
+        <div className={`min-h-screen max-w-full bg-[#ECEFF1] dark:bg-[#0A0A0A] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+            <div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                 <p className="text-center text-gray-300">Loading poll data...</p>
             </div>
         </div>
     );
 
     if (error) return (
-<div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-<div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
+<div className={`min-h-screen max-w-full bg-[#ECEFF1] dark:bg-[#0A0A0A] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+<div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                 <p className="text-center text-red-500">Error: {error}</p>
             </div>
         </div>
@@ -422,8 +422,8 @@ const VotePoll = () => {
 
     if (revealed || pollData?.metadata?.revealed === "1") {
         return (
-<div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-<div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
+<div className={`min-h-screen max-w-full bg-[#ECEFF1] dark:bg-[#0A0A0A] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+<div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                     {renderResults()}
                 </div>
             </div>
@@ -431,8 +431,8 @@ const VotePoll = () => {
     }
 
     return (
-<div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-<div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
+<div className={`min-h-screen max-w-full bg-[#ECEFF1] dark:bg-[#0A0A0A] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+<div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
             <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-white mb-4`}>
                 Cast Your Vote
             </h2>
