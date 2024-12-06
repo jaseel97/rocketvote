@@ -12,11 +12,11 @@ import {
 } from "./Config"
 
 const LoadingSpinner = () => (
-    <div className="inline-block h-5 w-5 mr-2 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
+    <div className="inline-block h-[1.25em] w-[1.25em] mr-[0.5em] animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
 );
 
 const ChangeVoteIndicator = () => (
-    <div className="mb-4 p-4 rounded-lg bg-purple-100/50 dark:bg-purple-900/50 border-2 border-purple-500/30 dark:border-purple-400/30">
+    <div className="mb-[1em] p-[1em] rounded-lg bg-purple-100/50 dark:bg-purple-900/50 border-2 border-purple-500/30 dark:border-purple-400/30">
         <div className="flex items-center">
             <span className="mr-2">🔄</span>
             <p className="font-medium text-purple-700 dark:text-purple-300">
@@ -31,7 +31,7 @@ const CheckMark = () => (
 );
 
 const MultiSelectionIndicator = () => (
-    <div className="mb-4 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+    <div className="mb-[1em] p-[1em] rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
         <div className="flex items-center">
             <span className="mr-2">☑️</span>
             <p className="font-medium text-blue-700 dark:text-blue-300">
@@ -43,7 +43,7 @@ const MultiSelectionIndicator = () => (
 
 const AnonymityIndicator = ({ isAnonymous }) => (
     <div className={`
-        mb-4 p-4 rounded-lg 
+        mb-[1em] p-[1em] rounded-lg  
         ${isAnonymous === "1"
             ? "bg-green-100/50 dark:bg-green-900/50 border-2 border-green-500/30 dark:border-green-400/30"
             : "bg-yellow-100/50 dark:bg-yellow-900/50 border-2 border-yellow-500/30 dark:border-yellow-400/30"
@@ -325,7 +325,7 @@ const VotePoll = () => {
                     const voteCounts = questionResults?.counts || {};
 
                     return (
-                        <div key={questionIndex} className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <div key={questionIndex} className="mb-[2em] p-[1.5em] bg-gray-800 rounded-lg shadow-sm">
                             <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
 
                             <div className="relative mb-6">
@@ -333,39 +333,39 @@ const VotePoll = () => {
                                     value={question.description}
                                     readOnly
                                     placeholder=" "
-                                    className="input-base resize-none hover:text-lg focus:text-lg peer"
+                                    className="input-base resize-none text-inherit-size peer"
                                     rows="3"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[1.5em]">
                                 <div className="space-y-4">
-                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white`}>
+                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
                                         Options Overview
                                     </h4>
                                     <AnimatedPollOptions
-                                        options={question.options}
-                                        counts={pollData.results?.[questionIndex]?.counts || {}}
-                                        selectedOption={selectedResultOption[questionIndex]}
-                                        setSelectedOption={(option) => {
-                                            setSelectedResultOption(prev => ({
-                                                ...prev,
-                                                [questionIndex]: option
-                                            }));
-                                        }}
-                                        getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
-                                        isAnonymous={pollData.metadata.anonymous === "1"}
-                                        userVotes={lastSubmittedOptions[questionIndex] ?
-                                            Object.entries(lastSubmittedOptions[questionIndex])
-                                                .filter(([_, selected]) => selected)
-                                                .map(([index]) => question.options[index])
-                                            : []
-                                        }
-                                    />
+    options={question.options}
+    counts={pollData.results?.[questionIndex]?.counts || {}}
+    selectedOption={selectedResultOption[questionIndex]}
+    setSelectedOption={(option) => {
+        setSelectedResultOption(prev => ({
+            ...prev,
+            [questionIndex]: option
+        }));
+    }}
+    isAnonymous="1"
+    userVotes={lastSubmittedOptions[questionIndex] ?
+        Object.entries(lastSubmittedOptions[questionIndex])
+            .filter(([_, selected]) => selected)
+            .map(([index]) => question.options[index])
+        : []
+    }
+    getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
+/>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white`}>
+                                    <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>
                                         Visual Breakdown
                                     </h4>
                                     <div>
@@ -405,16 +405,16 @@ const VotePoll = () => {
     };
 
     if (isPending) return (
-        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-            <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+            <div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                 <p className="text-center text-gray-300">Loading poll data...</p>
             </div>
         </div>
     );
 
     if (error) return (
-        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-            <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+<div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+<div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                 <p className="text-center text-red-500">Error: {error}</p>
             </div>
         </div>
@@ -422,8 +422,8 @@ const VotePoll = () => {
 
     if (revealed || pollData?.metadata?.revealed === "1") {
         return (
-            <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-                <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+<div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+<div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                     {renderResults()}
                 </div>
             </div>
@@ -431,8 +431,8 @@ const VotePoll = () => {
     }
 
     return (
-        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-        <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+<div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-[1em] ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+<div className="w-full bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
             <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-white mb-4`}>
                 Cast Your Vote
             </h2>
@@ -440,9 +440,9 @@ const VotePoll = () => {
             {pollData && <AnonymityIndicator isAnonymous={pollData.metadata.anonymous} />}
             <ChangeVoteIndicator />
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-[2em]">
                     {pollData?.metadata?.questions.map((question, questionIndex) => (
-                        <div key={questionIndex} className="mb-8 p-6 bg-gray-800 rounded-lg shadow-sm">
+                        <div key={questionIndex} className="mb-[2em] p-[1.5em] bg-gray-800 rounded-lg shadow-sm">
                             <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
 
                             <div className="relative mb-6">
@@ -451,13 +451,13 @@ const VotePoll = () => {
                                     readOnly
                                     placeholder=" "
                                     rows="3"
-                                    className="input-base resize-none hover:text-lg focus:text-lg peer"
+                                    className="input-base resize-none text-inherit-size peer"
                                 />
                             </div>
 
                             {question.multi_selection === "1" && <MultiSelectionIndicator />}
 
-                            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                            <div className="grid gap-[1em] grid-cols-1 md:grid-cols-2">
                                 {question.options.map((option, optionIndex) => (
                                     <div
                                         key={optionIndex}
@@ -466,7 +466,7 @@ const VotePoll = () => {
                                         onMouseEnter={() => setHoveredOption(`${questionIndex}-${optionIndex}`)}
                                         onMouseLeave={() => setHoveredOption(null)}
                                     >
-                                        <div className="relative z-10 p-4">
+                                        <div className="relative z-10 p-[1em]">
                                             <div className="flex items-center">
                                                 <input
                                                     type={question.multi_selection === "1" ? "checkbox" : "radio"}
@@ -488,7 +488,7 @@ const VotePoll = () => {
                     <button
                         type="submit"
                         disabled={submitStatus === 'submitting'}
-                        className="end-button end-button-sky w-full"
+                        className="button-variant-sky w-full"
                     >
                         {getSubmitButtonContent()}
                     </button>

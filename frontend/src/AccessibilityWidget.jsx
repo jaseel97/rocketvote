@@ -58,33 +58,72 @@ const AccessibilityWidget = () => {
 
       {isOpen && (
         <div className="fixed bottom-16 left-4 max-w-sm z-50 bg-white dark:bg-gray-500 rounded-lg shadow-lg p-4">
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {[
-              { setting: 'fontSize', icon: 'TT', label: 'Font Size' },
-              { setting: 'fontFamily', icon: 'F', label: 'Font' },
-              { setting: 'fontStyle', icon: "FS", label: 'Font Style' }
-            ].map(({ setting, icon, label }) => (
-              <button
-                key={setting}
-                className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex flex-col items-center"
-                onClick={() => handleSettingClick(setting)}
-              >
-                <div className="text-lg mb-2 dark:text-white">
-                  {typeof icon === 'string' ? icon : icon}
-                </div>
-                <div className="w-full flex gap-0.5 mb-2">
-                  {[1, 2, 3].map((segment) => (
-                    <div
-                      key={segment}
-                      className={`h-1 flex-1 rounded-sm transition-colors duration-300 ${segment <= getActiveSegments(setting)
-                          ? 'bg-blue-600'
-                          : 'bg-gray-200 dark:bg-gray-600'
+              { 
+                setting: 'fontSize', 
+                icon: 'TT', 
+                label: 'Font Size',
+                showOnlyLg: true
+              },
+              { 
+                setting: 'fontFamily', 
+                icon: 'F', 
+                label: 'Font'
+              },
+              { 
+                setting: 'fontStyle', 
+                icon: "FS", 
+                label: 'Font Style'
+              }
+            ].map(({ setting, icon, label, showOnlyLg }) => (
+              showOnlyLg ? (
+                <button
+                  key={setting}
+                  className="hidden lg:flex p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex-col items-center"
+                  onClick={() => handleSettingClick(setting)}
+                >
+                  <div className="text-lg mb-2 dark:text-white">
+                    {typeof icon === 'string' ? icon : icon}
+                  </div>
+                  <div className="w-full flex gap-0.5 mb-2">
+                    {[1, 2, 3].map((segment) => (
+                      <div
+                        key={segment}
+                        className={`h-1 flex-1 rounded-sm transition-colors duration-300 ${
+                          segment <= getActiveSegments(setting)
+                            ? 'bg-blue-600'
+                            : 'bg-gray-200 dark:bg-gray-600'
                         }`}
-                    />
-                  ))}
-                </div>
-                <div className="text-xs dark:text-gray-300">{label}</div>
-              </button>
+                      />
+                    ))}
+                  </div>
+                  <div className="text-xs dark:text-gray-300">{label}</div>
+                </button>
+              ) : (
+                <button
+                  key={setting}
+                  className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex flex-col items-center"
+                  onClick={() => handleSettingClick(setting)}
+                >
+                  <div className="text-lg mb-2 dark:text-white">
+                    {typeof icon === 'string' ? icon : icon}
+                  </div>
+                  <div className="w-full flex gap-0.5 mb-2">
+                    {[1, 2, 3].map((segment) => (
+                      <div
+                        key={segment}
+                        className={`h-1 flex-1 rounded-sm transition-colors duration-300 ${
+                          segment <= getActiveSegments(setting)
+                            ? 'bg-blue-600'
+                            : 'bg-gray-200 dark:bg-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-xs dark:text-gray-300">{label}</div>
+                </button>
+              )
             ))}
           </div>
 

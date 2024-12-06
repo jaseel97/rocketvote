@@ -9,41 +9,13 @@ const COLORS = [
 
 const RADIAN = Math.PI / 180;
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value, label, index, data }) => {
-    const radius = outerRadius * 1.15;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    const showFullLabel = data.length <= 8;
-    const displayText = showFullLabel
-        ? `${label}: ${(percent * 100).toFixed(1)}%`
-        : `${(percent * 100).toFixed(1)}%`;
-
-    const textAnchor = x > cx ? 'start' : 'end';
-
-    const fill = COLORS[index % COLORS.length];
-
-    return (
-        <text
-            x={x}
-            y={y}
-            fill={fill}
-            textAnchor={textAnchor}
-            dominantBaseline="central"
-            className="text-l font-semibold"
-        >
-            {displayText}
-        </text>
-    );
-};
-
 const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         const fill = COLORS[payload[0].dataIndex % COLORS.length];
         return (
-            <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-900 dark:text-gray-100" style={{ color: fill }}>
+            <div className="bg-white dark:bg-gray-800 p-[0.5em] rounded shadow-lg border border-gray-200 dark:border-gray-700">
+                <p className="text-inherit-size text-gray-900 dark:text-gray-100" style={{ color: fill }}>
                     {`${data.label} : ${data.value} votes`}
                 </p>
             </div>
@@ -55,7 +27,7 @@ const CustomTooltip = ({ active, payload }) => {
 const CustomPieChart = ({ series, height = 300 }) => {
     if (!series?.[0]?.data || series[0].data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
+            <div className="flex items-center justify-center h-[18.75em] text-gray-500 text-inherit-size">
                 No Votes Yet
             </div>
         );
@@ -70,16 +42,16 @@ const CustomPieChart = ({ series, height = 300 }) => {
 
     if (data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
+            <div className="flex items-center justify-center h-[18.75em] text-gray-500 text-inherit-size">
                 No votes yet
             </div>
         );
     }
 
-    const innerRadius = data.length > 8 ? 60 : 0;
+    const innerRadius = data.length > 8 ? '20%' : 0;
 
     return (
-        <div className="w-full" style={{ height }}>
+        <div className="w-full" style={{ height: `${height / 16}em` }}>
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Pie
@@ -89,7 +61,7 @@ const CustomPieChart = ({ series, height = 300 }) => {
                         labelLine={false}
                         label={props => renderCustomizedLabel({ ...props, data })}
                         innerRadius={innerRadius}
-                        outerRadius={Math.min(height, 300) / 2.5}
+                        outerRadius="40%"
                         paddingAngle={2}
                         dataKey="value"
                     >
@@ -106,5 +78,34 @@ const CustomPieChart = ({ series, height = 300 }) => {
         </div>
     );
 };
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value, label, index, data }) => {
+    const radius = outerRadius * 1.15;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    const showFullLabel = data.length <= 8;
+    const displayText = showFullLabel
+        ? `${label}: ${(percent * 100).toFixed(1)}%`
+        : `${(percent * 100).toFixed(1)}%`;
+
+    const textAnchor = x > cx ? 'start' : 'end';
+    const fill = COLORS[index % COLORS.length];
+
+    return (
+        <text
+            x={x}
+            y={y}
+            fill={fill}
+            textAnchor={textAnchor}
+            dominantBaseline="central"
+            className="text-inherit-size font-semibold"
+        >
+            {displayText}
+        </text>
+    );
+};
+
+
 
 export default CustomPieChart;

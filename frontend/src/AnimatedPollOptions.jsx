@@ -6,7 +6,7 @@ const AnimatedPollOptions = ({ options, counts, selectedOption, setSelectedOptio
     const sortedOptions = [...options].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
 
     return (
-        <div className={`grid gap-4 ${options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className={`grid gap-[1em] ${options.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
             <AnimatePresence>
                 {sortedOptions.map((option, index) => (
                     <motion.div
@@ -50,37 +50,37 @@ const AnimatedPollOptions = ({ options, counts, selectedOption, setSelectedOptio
                                 }
                             `}
                         >
-                            <div className="relative z-10 p-4">
+                            <div className="relative z-10 p-[1em]">
                                 <div className="flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium text-left transition-all duration-300 ease-in-out">
+                                    <div className="flex items-center gap-[0.5em]">
+                                        <span className="font-medium text-left transition-all duration-300 ease-in-out text-inherit-size">
                                             {option}
                                         </span>
                                         {userVotes?.includes(option) && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            <span className="inline-flex items-center px-[0.5em] py-[0.125em] rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                                                 Your choice
                                             </span>
                                         )}
                                     </div>
-                                    <span className="font-medium transition-all duration-300 ease-in-out">
+                                    <span className="font-medium transition-all duration-300 ease-in-out text-inherit-size">
                                         {counts[option] || 0} {(counts[option] || 0) === 1 ? 'vote' : 'votes'}
                                     </span>
                                 </div>
 
-                                {!isAnonymous && (
-                                    <div className={`
-                                        mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700
-                                        transition-all duration-300 ease-in-out
-                                        ${(selectedOption === option || hoveredOption === option)
-                                            ? 'opacity-100 max-h-20'
-                                            : 'opacity-0 max-h-0 overflow-hidden'
-                                        }
-                                    `}>
-                                        <p className="text-sm text-left max-h-16 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
-                                            <strong>Chosen by</strong>: {getVotersForOption(option).length > 0 ? getVotersForOption(option).join(', ') : <span className="italic">None</span>}
-                                        </p>
-                                    </div>
-                                )}
+                                {isAnonymous !== "1" && (
+    <div className={`
+        mt-[0.5em] pt-[0.5em] border-t border-zinc-200 dark:border-zinc-700
+        transition-all duration-300 ease-in-out
+        ${(selectedOption === option || hoveredOption === option)
+            ? 'opacity-100 max-h-[5em]'
+            : 'opacity-0 max-h-0 overflow-hidden'
+        }
+    `}>
+        <p className="text-[0.875em] text-left max-h-[4em] overflow-y-auto [&::-webkit-scrollbar]:w-[0.25em] [&::-webkit-scrollbar-thumb]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
+            <strong>Chosen by</strong>: {getVotersForOption(option).length > 0 ? getVotersForOption(option).join(', ') : <span className="italic">None</span>}
+        </p>
+    </div>
+)}
                             </div>
 
                             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10 transition-all duration-300 ease-in-out"></div>

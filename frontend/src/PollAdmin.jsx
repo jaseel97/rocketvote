@@ -114,21 +114,21 @@ const PollAdmin = () => {
     );
 
     return (
-        <div className={`
-            min-h-screen max-w-full 
-            bg-[#ECEFF1] dark:bg-[#0A0A0A]
-            flex justify-center p-4
-            ${settings.fontSize}
-            ${settings.fontFamily}
-            ${settings.fontStyle}
-        `}>
-            <div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+<div className={`
+    min-h-screen max-w-full 
+    bg-[#ECEFF1] dark:bg-[#0A0A0A]
+    flex justify-center p-[1em]
+    ${settings.fontSize}
+    ${settings.fontFamily}
+    ${settings.fontStyle}
+`}>
+    <div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
                 <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>
                     Voting Dashboard
                 </h2>
 
-                <div className="mb-6">
-                    <div className="flex gap-4 items-center">
+                <div className="mb-[1.5em]">
+                    <div className="flex gap-[1em] items-cente">
                         <div className="relative flex-1">
                             <input
                                 type="text"
@@ -136,25 +136,28 @@ const PollAdmin = () => {
                                 value={`${appDomain}/${poll_id}`}
                                 readOnly
                                 placeholder=" "
-                                className="input-base hover:text-lg focus:text-lg peer"
+                                className="input-base text-inherit-size peer"
                             />
                             <label htmlFor="poll-url" className="label-base">
                                 Poll URL
                             </label>
                         </div>
                         <button
-                            onClick={handleCopy}
-                            className="button-variant-sky whitespace-nowrap"
-                        >
-                            <span className="relative z-10">
-                                {copySuccess ? 'Copied!' : 'Copy URL'}
-                            </span>
-                        </button>
+    onClick={handleCopy}
+    className="button-variant-sky whitespace-nowrap text-inherit-size
+    px-[0.75em] py-[0.5em] sm:px-[1em] sm:py-[0.75em] md:px-[1.5em] md:py-[1em]
+    min-w-[6em] sm:min-w-[8em]
+    text-sm sm:text-base"
+>
+    <span className="relative z-10">
+        {copySuccess ? 'Copied!' : 'Copy URL'}
+    </span>
+</button>
                     </div>
                 </div>
 
                 {pollData.metadata.anonymous === "1" && (
-                    <div className="mb-6 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+                   <div className="mb-[1.5em] p-[1em] rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
                         <div className="flex items-center">
                             <span className="mr-2">🔒</span>
                             <p className="font-medium text-blue-700 dark:text-blue-300">
@@ -165,7 +168,7 @@ const PollAdmin = () => {
                 )}
 
                 {pollData.metadata.questions.map((question, questionIndex) => (
-                    <div key={questionIndex} className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <div key={questionIndex} className="p-[1.5em] md:p-[2em] bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-4">
                         <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
 
                         <div className="relative mb-6">
@@ -174,7 +177,7 @@ const PollAdmin = () => {
                                 readOnly
                                 placeholder=" "
                                 rows="3"
-                                className="input-base resize-none hover:text-lg focus:text-lg peer"
+                                className="input-base resize-none text-inherit-size peer"
                             ></textarea>
                         </div>
 
@@ -239,14 +242,14 @@ const PollAdmin = () => {
                     {!isRevealed ? (
                         <button
                             onClick={handleReveal}
-                            className="end-button end-button-green w-full"
+                            className="reveal-button w-full"
                         >
                             <span className="relative z-10">Reveal Poll Results</span>
                         </button>
                     ) : (
                         <button
                             disabled
-                            className="w-full"
+                            className="revealed-button w-full"
                         >
                             <span className="relative z-10">Results Revealed</span>
                         </button>

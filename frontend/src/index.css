@@ -32,7 +32,7 @@
   }
 
   .button-neumorphic {
-    @apply ml-2 p-3 rounded-2xl
+    @apply ml-[0.5em] p-[0.75em] rounded-2xl
     bg-gradient-to-br text-gray-600 dark:text-gray-400 border
     transition-all duration-300 ease-in-out;
   }
@@ -86,7 +86,9 @@
   }
 
   .input-base {
-    @apply block px-2.5 pb-2.5 pt-4 w-full text-lg
+    @apply block w-full
+    px-[0.8em] pb-[0.8em] pt-[1.2em]
+    text-inherit-size
     text-gray-900 dark:text-white
     bg-gray-50 dark:bg-gray-600
     border-0 border-b-2 border-gray-300 dark:border-gray-500
@@ -96,34 +98,38 @@
     hover:border-red-500 dark:hover:border-red-400
     hover:bg-gray-50 dark:hover:bg-gray-700
     transition-all duration-300
+    min-h-[3.5em]
     overflow-hidden;
-  }
+}
 
-  .label-base {
-    @apply absolute text-lg text-gray-800 dark:text-gray-400
-    duration-300 transform -translate-y-4 top-2 z-10 origin-[0]
-    bg-transparent px-2 left-1 
+.label-base {
+    @apply absolute text-inherit-size text-gray-800 dark:text-gray-400
+    duration-300 transform 
+    -translate-y-[1em] top-[0.6em] z-10 origin-[0]
+    bg-transparent px-[0.6em] left-[0.3em]
+    pointer-events-none
     peer-focus:scale-90 peer-hover:scale-90
-    peer-placeholder-shown:-translate-y-1/2
-    peer-placeholder-shown:top-1/2 
+    peer-placeholder-shown:-translate-y-[50%]
+    peer-placeholder-shown:top-[50%]
     peer-[:not(:placeholder-shown)]:text-red-400
-    peer-[:not(:placeholder-shown)]:-translate-y-4
-    peer-[:not(:placeholder-shown)]:-top-1
-    peer-focus:px-2 peer-hover:px-2
-    peer-focus:-top-1 peer-hover:top-0
-    peer-focus:-translate-y-4 peer-hover:-translate-y-4
+    peer-[:not(:placeholder-shown)]:-translate-y-[1em]
+    peer-[:not(:placeholder-shown)]:-top-[0.3em]
+    peer-focus:px-[0.6em] peer-hover:px-[0.6em]
+    peer-focus:-top-[0.3em] peer-hover:top-0
+    peer-focus:-translate-y-[1em] peer-hover:-translate-y-[1em]
     peer-focus:text-red-400 peer-hover:text-red-400
     dark:peer-focus:text-red-400 dark:peer-hover:text-red-400
-    peer-focus:font-medium peer-hover:font-medium
-    ;
+    peer-focus:font-medium peer-hover:font-medium;
 }
 
 .textarea-label {
-  @apply label-base peer-placeholder-shown:top-6
-  peer-focus:-top-1
-  peer-hover:scale-90
-peer-hover:-top-1
-peer-hover:-translate-y-4;
+    @apply label-base 
+    peer-placeholder-shown:top-[1.5em]
+    peer-focus:-top-[0.3em]
+    peer-hover:scale-90
+    peer-hover:-top-[0.3em]
+    peer-hover:-translate-y-[1em]
+    pointer-events-none;
 }
 
   .delete-icon-button {
@@ -155,7 +161,7 @@ peer-hover:-translate-y-4;
   }
 
   .poll-inner-container {
-    @apply w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-8 md:p-12;
+    @apply w-full bg-[#CFD8DC] dark:bg-gray-800 rounded-lg shadow-md p-[1.5em] md:p-[2em]; ;
   }
 
   .poll-dashboard-inner, .poll-section-inner {
@@ -165,7 +171,10 @@ peer-hover:-translate-y-4;
   .poll-section-container {
     @apply w-full bg-[#ECEFF1] dark:bg-gray-900 flex justify-center p-2 rounded-md;
   }
-
+  
+  .question-container {
+    @apply mb-[2em] p-[1.5em] bg-white dark:bg-gray-800 rounded-lg shadow-sm;
+}
 
   .chart-container { @apply bg-transparent rounded-2xl p-6 shadow-neumorphic; }
   .flex-container { @apply flex gap-4; }

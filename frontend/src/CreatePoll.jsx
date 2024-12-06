@@ -34,7 +34,6 @@ const CreatePoll = () => {
   const [validationError, setValidationError] = useState("");
   const [anonymous, setAnonymous] = useState(false);
 
-  // Authentication Check
   useEffect(() => {
     if (isAuthenticated === false) {
       redirectToLogin();
@@ -44,14 +43,12 @@ const CreatePoll = () => {
   if (isAuthenticated === null) return <div>Redirecting to login...</div>;
   if (!isAuthenticated) return null;
 
-  // Fetch Templates
   const {
     data: templates,
     isPending,
     error,
   } = useFetch(`${apiDomain}/templates?_${triggerFetch}`);
 
-  // Validation Functions
   const validateOptions = (options) => {
     const hasEmptyOptions = options.some((option) => !option.trim());
     if (hasEmptyOptions) {
@@ -77,7 +74,6 @@ const CreatePoll = () => {
     return true;
   };
 
-  // Handler Functions
   const handleAddQuestion = () => {
     setQuestions([
       ...questions,
@@ -262,13 +258,13 @@ const CreatePoll = () => {
   return (
     <div
       className={`
-            min-h-screen max-w-full bg-[#ECEFF1] dark:bg-[#292929] flex justify-center p-4
+            min-h-screen max-w-full bg-[#ECEFF1] dark:bg-[#292929] flex justify-center p-[1em]
             ${settings.fontSize}
             ${settings.fontFamily}
             ${settings.fontStyle}
         `}
     >
-      <div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+      <div className="w-full bg-[#DEE4E7] dark:bg-gray-900 rounded-lg shadow-md p-[1.5em] md:p-[2em]">
         <div className="flex flex-col md:flex-row">
           {/* Templates Section */}
           <div className="w-full md:w-1/2 pr-0 md:pr-8 mb-6 md:mb-0">
@@ -284,18 +280,34 @@ const CreatePoll = () => {
               Poll Templates
             </h2>
             <div className="relative">
-              <input
-                type="text"
-                id="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder=" "
-                className="peer input-base"
-              />
-              <label htmlFor="search" className="label-base">
-                Search templates
-              </label>
-            </div>
+    <input
+        type="text"
+        id="search"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder=" "
+        className="peer input-base pr-[2.5em]"
+    />
+    <label htmlFor="search" className="label-base">
+        Search templates
+    </label>
+    <div className="absolute right-[0.75em] top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+        <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            strokeWidth={1.5} 
+            stroke="currentColor" 
+            className="w-[1.25em] h-[1.25em]"
+        >
+            <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" 
+            />
+        </svg>
+    </div>
+</div>
 
             {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
             {isPending && (
@@ -357,7 +369,6 @@ const CreatePoll = () => {
             </div>
           </div>
 
-          {/* Create Poll Section */}
           <div className="w-full md:w-1/2">
             <h2
               className={`${
@@ -379,59 +390,59 @@ const CreatePoll = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              <div className="relative mb-6">
-                <input
-                  type="text"
-                  id="template-title"
-                  value={templateTitle}
-                  onChange={(e) => setTemplateTitle(e.target.value)}
-                  placeholder=" "
-                  className="peer input-base"
-                />
-                <label htmlFor="template-title" className="label-base">
-                  Template Title
-                </label>
-              </div>
+<form onSubmit={handleSubmit}>
+    <div className="relative mb-[1.5em]">
+        <input
+            type="text"
+            id="template-title"
+            value={templateTitle}
+            onChange={(e) => setTemplateTitle(e.target.value)}
+            placeholder=" "
+            className="peer input-base"
+        />
+        <label htmlFor="template-title" className="label-base">
+            Template Title
+        </label>
+    </div>
 
-              {questions.map((question, questionIndex) => (
-                <div
-                  key={questionIndex}
-                  className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">
-                      Question {questionIndex + 1}
-                    </h3>
-                    {questions.length > 1 && (
-                      <button
+    {questions.map((question, questionIndex) => (
+        <div
+            key={questionIndex}
+            className="question-container"
+        >
+            <div className="flex justify-between items-center mb-[1em]"> 
+                <h3 className="text-xl text-gray-900 dark:text-white mb-[1em] font-semibold">
+                Question {questionIndex + 1}
+                </h3>
+                {questions.length > 1 && (
+                    <button
                         type="button"
                         onClick={() => handleDeleteQuestion(questionIndex)}
                         className="text-red-500 hover:text-red-700"
-                      >
-                        <TrashOutline className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
+                    >
+                        <TrashOutline className="w-[1.25em] h-[1.25em]" />
+                    </button>
+                )}
+            </div>
 
-                  <div className="relative mb-6">
-                    <textarea
-                      required
-                      value={question.description}
-                      onChange={(e) => {
+            <div className="relative mb-[1.5em]"> 
+                <textarea
+                    required
+                    value={question.description}
+                    onChange={(e) => {
                         const newQuestions = [...questions];
                         newQuestions[questionIndex].description =
-                          e.target.value;
+                            e.target.value;
                         setQuestions(newQuestions);
-                      }}
-                      placeholder=" "
-                      rows="3"
-                      className="peer input-base resize-none"
-                    ></textarea>
-                    <label className="textarea-label">
-                      Description/Question
-                    </label>
-                  </div>
+                    }}
+                    placeholder=" "
+                    rows="3"
+                    className="peer input-base resize-none"
+                ></textarea>
+                <label className="textarea-label">
+                    Description/Question
+                </label>
+            </div>
 
                   {question.options.map((option, optionIndex) => {
     const isAtMaxOptions = question.options.length >= 15;
@@ -526,27 +537,27 @@ const CreatePoll = () => {
                 label="Anonymous Poll"
               />
 
-              <div className="mt-6 flex gap-4">
-                <button type="submit" className="end-button end-button-green">
-                  <span className="relative z-10">Create Poll</span>
-                </button>
+<div className="mt-6 flex gap-4">
+    <button type="submit" className="end-button end-button-green">
+        <span className="relative z-10 text-inherit-size">Create Poll</span>
+    </button>
 
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="end-button end-button-red"
-                >
-                  <span className="relative z-10">Reset</span>
-                </button>
+    <button
+        type="button"
+        onClick={handleReset}
+        className="end-button end-button-red"
+    >
+        <span className="relative z-10 text-inherit-size">Reset</span>
+    </button>
 
-                <button
-                  type="button"
-                  onClick={handleSaveTemplate}
-                  className="end-button end-button-sky"
-                >
-                  <span className="relative z-10">Save Template</span>
-                </button>
-              </div>
+    <button
+        type="button"
+        onClick={handleSaveTemplate}
+        className="end-button end-button-sky"
+    >
+        <span className="relative z-10 text-inherit-size">Save Template</span>
+    </button>
+</div>
             </form>
           </div>
         </div>
