@@ -24,7 +24,7 @@ const PollAdmin = () => {
     const [selectedOptions, setSelectedOptions] = useState({});
     const [copySuccess, setCopySuccess] = useState(false);
     const { settings } = useAccessibility();
-    
+
     useEffect(() => {
         if (isAuthenticated === false) {
             redirectToLogin();
@@ -142,8 +142,8 @@ const PollAdmin = () => {
                                 Poll URL
                             </label>
                         </div>
-                        <button 
-                            onClick={handleCopy} 
+                        <button
+                            onClick={handleCopy}
                             className="button-variant-sky whitespace-nowrap"
                         >
                             <span className="relative z-10">
@@ -152,6 +152,17 @@ const PollAdmin = () => {
                         </button>
                     </div>
                 </div>
+
+                {pollData.metadata.anonymous === "1" && (
+                    <div className="mb-6 p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
+                        <div className="flex items-center">
+                            <span className="mr-2">🔒</span>
+                            <p className="font-medium text-blue-700 dark:text-blue-300">
+                                This is an anonymous poll. Voter identities are hidden.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {pollData.metadata.questions.map((question, questionIndex) => (
                     <div key={questionIndex} className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
@@ -168,17 +179,6 @@ const PollAdmin = () => {
                         </div>
 
                         <div className="space-y-6">
-                            {pollData.metadata.anonymous === "1" && (
-                                <div className="p-4 rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
-                                    <div className="flex items-center">
-                                        <span className="mr-2">🔒</span>
-                                        <p className="font-medium text-blue-700 dark:text-blue-300">
-                                            This is an anonymous poll. Voter identities are hidden.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-center text-gray-900 dark:text-white`}>

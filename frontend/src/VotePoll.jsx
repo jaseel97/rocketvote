@@ -15,6 +15,17 @@ const LoadingSpinner = () => (
     <div className="inline-block h-5 w-5 mr-2 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
 );
 
+const ChangeVoteIndicator = () => (
+    <div className="mb-4 p-4 rounded-lg bg-purple-100/50 dark:bg-purple-900/50 border-2 border-purple-500/30 dark:border-purple-400/30">
+        <div className="flex items-center">
+            <span className="mr-2">🔄</span>
+            <p className="font-medium text-purple-700 dark:text-purple-300">
+                You can change your votes at any time by selecting different options and pressing the Submit Vote button, as long as results haven't been revealed.
+            </p>
+        </div>
+    </div>
+);
+
 const CheckMark = () => (
     <span className="mr-2 text-lg">✓</span>
 );
@@ -33,7 +44,7 @@ const MultiSelectionIndicator = () => (
 const AnonymityIndicator = ({ isAnonymous }) => (
     <div className={`
         mb-4 p-4 rounded-lg 
-        ${isAnonymous === "1" 
+        ${isAnonymous === "1"
             ? "bg-green-100/50 dark:bg-green-900/50 border-2 border-green-500/30 dark:border-green-400/30"
             : "bg-yellow-100/50 dark:bg-yellow-900/50 border-2 border-yellow-500/30 dark:border-yellow-400/30"
         }
@@ -147,19 +158,19 @@ const VotePoll = () => {
 
     const hasChangedSelection = () => {
         if (!selectedOptions || !lastSubmittedOptions) return true;
-        
+
         const questionIndices = Object.keys(selectedOptions);
         const lastSubmittedIndices = Object.keys(lastSubmittedOptions);
-        
+
         if (questionIndices.length !== lastSubmittedIndices.length) return true;
-        
+
         return questionIndices.some(questionIndex => {
             const currentQuestion = selectedOptions[questionIndex] || {};
             const lastSubmitted = lastSubmittedOptions[questionIndex] || {};
-            
+
             const selectedIndices = Object.keys(currentQuestion).filter(key => currentQuestion[key]);
             const lastSubmittedIndices = Object.keys(lastSubmitted).filter(key => lastSubmitted[key]);
-            
+
             if (selectedIndices.length !== lastSubmittedIndices.length) return true;
             return selectedIndices.some(index => !lastSubmitted[index]);
         });
@@ -167,11 +178,11 @@ const VotePoll = () => {
 
     const handleOptionChange = (questionIndex, optionIndex, option) => {
         setSelectedOptions(prevSelectedOptions => {
-            const newSelectedOptions = {...prevSelectedOptions};
+            const newSelectedOptions = { ...prevSelectedOptions };
             if (!newSelectedOptions[questionIndex]) {
                 newSelectedOptions[questionIndex] = {};
             }
-            
+
             if (pollData.metadata.questions[questionIndex].multi_selection === "1") {
                 newSelectedOptions[questionIndex] = {
                     ...newSelectedOptions[questionIndex],
@@ -184,7 +195,7 @@ const VotePoll = () => {
             }
             return newSelectedOptions;
         });
-        
+
         if (submitStatus === 'submitted') {
             setSubmitStatus('idle');
         }
@@ -197,7 +208,7 @@ const VotePoll = () => {
             const questionOptions = selectedOptions[index] || {};
             return Object.values(questionOptions).some(value => value);
         });
-        
+
         if (!hasSelections) return;
 
         setSubmitStatus('submitting');
@@ -222,7 +233,7 @@ const VotePoll = () => {
             }
 
             setSubmitStatus('submitted');
-            setLastSubmittedOptions({...selectedOptions});
+            setLastSubmittedOptions({ ...selectedOptions });
             await fetchPollData();
         } catch (error) {
             console.error("Error submitting vote:", error);
@@ -237,7 +248,7 @@ const VotePoll = () => {
             const questionOptions = selectedOptions[index] || {};
             return Object.values(questionOptions).some(value => value);
         });
-        
+
         const canSubmit = hasSelections && (submitStatus !== 'submitted' || hasChangedSelection());
 
         if (submitStatus === 'submitting') {
@@ -263,7 +274,7 @@ const VotePoll = () => {
 
     const getVotersForOption = (questionIndex, option) => {
         if (!pollData?.results) return [];
-        
+
         const questionResults = pollData.results[questionIndex];
         if (!questionResults?.votes) return [];
 
@@ -308,7 +319,7 @@ const VotePoll = () => {
                 <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-gray-900 dark:text-white mb-4`}>
                     Poll Results
                 </h2>
-                
+
                 {pollData.metadata.questions.map((question, questionIndex) => {
                     const questionResults = pollData.results?.[questionIndex];
                     const voteCounts = questionResults?.counts || {};
@@ -332,9 +343,9 @@ const VotePoll = () => {
                                     <h4 className={`${settings.fontSize === 'text-big' ? 'text-2xl' : settings.fontSize === 'text-bigger' ? 'text-3xl' : 'text-xl'} font-bold text-gray-900 dark:text-white`}>
                                         Options Overview
                                     </h4>
-                                    <AnimatedPollOptions 
+                                    <AnimatedPollOptions
                                         options={question.options}
-                                        counts={voteCounts}
+                                        counts={pollData.results?.[questionIndex]?.counts || {}}
                                         selectedOption={selectedResultOption[questionIndex]}
                                         setSelectedOption={(option) => {
                                             setSelectedResultOption(prev => ({
@@ -344,6 +355,12 @@ const VotePoll = () => {
                                         }}
                                         getVotersForOption={(option) => getVotersForOption(questionIndex, option)}
                                         isAnonymous={pollData.metadata.anonymous === "1"}
+                                        userVotes={lastSubmittedOptions[questionIndex] ?
+                                            Object.entries(lastSubmittedOptions[questionIndex])
+                                                .filter(([_, selected]) => selected)
+                                                .map(([index]) => question.options[index])
+                                            : []
+                                        }
                                     />
                                 </div>
 
@@ -384,100 +401,101 @@ const VotePoll = () => {
                 })}
             </div>
 
-);
-};
+        );
+    };
 
-if (isPending) return (
-    <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-        <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
-            <p className="text-center text-gray-300">Loading poll data...</p>
-        </div>
-    </div>
-);
-
-if (error) return (
-    <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
-        <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
-            <p className="text-center text-red-500">Error: {error}</p>
-        </div>
-    </div>
-);
-
-if (revealed || pollData?.metadata?.revealed === "1") {
-    return (
+    if (isPending) return (
         <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
             <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
-                {renderResults()}
+                <p className="text-center text-gray-300">Loading poll data...</p>
             </div>
         </div>
     );
-}
 
-return (
-    <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+    if (error) return (
+        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+            <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+                <p className="text-center text-red-500">Error: {error}</p>
+            </div>
+        </div>
+    );
+
+    if (revealed || pollData?.metadata?.revealed === "1") {
+        return (
+            <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
+                <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
+                    {renderResults()}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`min-h-screen max-w-full bg-[#121212] flex justify-center p-4 ${settings.fontSize} ${settings.fontFamily} ${settings.fontStyle}`}>
         <div className="w-full bg-gray-900 rounded-lg shadow-md p-8 md:p-12">
             <h2 className={`${settings.fontSize === 'text-big' ? 'text-3xl' : settings.fontSize === 'text-bigger' ? 'text-4xl' : 'text-2xl'} font-bold text-center text-white mb-4`}>
                 Cast Your Vote
             </h2>
 
             {pollData && <AnonymityIndicator isAnonymous={pollData.metadata.anonymous} />}
+            <ChangeVoteIndicator />
 
             <form onSubmit={handleSubmit} className="space-y-8">
-                {pollData?.metadata?.questions.map((question, questionIndex) => (
-                    <div key={questionIndex} className="mb-8 p-6 bg-gray-800 rounded-lg shadow-sm">
-                        <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
+                    {pollData?.metadata?.questions.map((question, questionIndex) => (
+                        <div key={questionIndex} className="mb-8 p-6 bg-gray-800 rounded-lg shadow-sm">
+                            <h3 className="text-xl text-gray-900 dark:text-white mb-4 font-semibold">Question {questionIndex + 1}</h3>
 
-                        <div className="relative mb-6">
-                            <textarea
-                                value={question.description}
-                                readOnly
-                                placeholder=" "
-                                rows="3"
-                                className="input-base resize-none hover:text-lg focus:text-lg peer"
-                            />
-                        </div>
+                            <div className="relative mb-6">
+                                <textarea
+                                    value={question.description}
+                                    readOnly
+                                    placeholder=" "
+                                    rows="3"
+                                    className="input-base resize-none hover:text-lg focus:text-lg peer"
+                                />
+                            </div>
 
-                        {question.multi_selection === "1" && <MultiSelectionIndicator />}
+                            {question.multi_selection === "1" && <MultiSelectionIndicator />}
 
-                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                            {question.options.map((option, optionIndex) => (
-                                <div
-                                    key={optionIndex}
-                                    className={optionCardClasses(questionIndex, optionIndex)}
-                                    onClick={() => handleOptionChange(questionIndex, optionIndex, option)}
-                                    onMouseEnter={() => setHoveredOption(`${questionIndex}-${optionIndex}`)}
-                                    onMouseLeave={() => setHoveredOption(null)}
-                                >
-                                    <div className="relative z-10 p-4">
-                                        <div className="flex items-center">
-                                            <input
-                                                type={question.multi_selection === "1" ? "checkbox" : "radio"}
-                                                name={`poll-option-${questionIndex}`}
-                                                checked={selectedOptions[questionIndex]?.[optionIndex] || false}
-                                                onChange={() => {}}
-                                                className="mr-3 w-5 h-5"
-                                            />
-                                            <span className="font-medium">{option}</span>
+                            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                                {question.options.map((option, optionIndex) => (
+                                    <div
+                                        key={optionIndex}
+                                        className={optionCardClasses(questionIndex, optionIndex)}
+                                        onClick={() => handleOptionChange(questionIndex, optionIndex, option)}
+                                        onMouseEnter={() => setHoveredOption(`${questionIndex}-${optionIndex}`)}
+                                        onMouseLeave={() => setHoveredOption(null)}
+                                    >
+                                        <div className="relative z-10 p-4">
+                                            <div className="flex items-center">
+                                                <input
+                                                    type={question.multi_selection === "1" ? "checkbox" : "radio"}
+                                                    name={`poll-option-${questionIndex}`}
+                                                    checked={selectedOptions[questionIndex]?.[optionIndex] || false}
+                                                    onChange={() => { }}
+                                                    className="mr-3 w-5 h-5"
+                                                />
+                                                <span className="font-medium">{option}</span>
+                                            </div>
                                         </div>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10" />
                                     </div>
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:to-black/10" />
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
 
-                <button
-                    type="submit"
-                    disabled={submitStatus === 'submitting'}
-                    className="end-button end-button-sky w-full"
-                >
-                    {getSubmitButtonContent()}
-                </button>
-            </form>
+                    <button
+                        type="submit"
+                        disabled={submitStatus === 'submitting'}
+                        className="end-button end-button-sky w-full"
+                    >
+                        {getSubmitButtonContent()}
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default VotePoll;

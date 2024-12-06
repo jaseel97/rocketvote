@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AnimatedPollOptions = ({ options, counts, selectedOption, setSelectedOption, getVotersForOption, isAnonymous }) => {
+const AnimatedPollOptions = ({ options, counts, selectedOption, setSelectedOption, getVotersForOption, isAnonymous, userVotes }) => {
     const [hoveredOption, setHoveredOption] = React.useState(null);
     const sortedOptions = [...options].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
 
@@ -52,9 +52,16 @@ const AnimatedPollOptions = ({ options, counts, selectedOption, setSelectedOptio
                         >
                             <div className="relative z-10 p-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-medium text-left transition-all duration-300 ease-in-out">
-                                        {option}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-left transition-all duration-300 ease-in-out">
+                                            {option}
+                                        </span>
+                                        {userVotes?.includes(option) && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                Your choice
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="font-medium transition-all duration-300 ease-in-out">
                                         {counts[option] || 0} {(counts[option] || 0) === 1 ? 'vote' : 'votes'}
                                     </span>
