@@ -113,6 +113,11 @@ const PollAdmin = () => {
         </div>
     );
 
+    const getTotalRespondents = () => {
+        if (!pollData?.results?.[0]?.votes) return 0;
+        return Object.keys(pollData.results[0].votes).length;
+    };
+
     return (
 <div className={`
     min-h-screen max-w-full 
@@ -155,7 +160,9 @@ const PollAdmin = () => {
 </button>
                     </div>
                 </div>
-
+                <div className="text-center text-lg mb-4 mt-4 font-semibold text-blue-700 dark:text-blue-300">
+                    Total Respondents: {getTotalRespondents()}
+                </div>
                 {pollData.metadata.anonymous === "1" && (
                    <div className="mb-[1.5em] p-[1em] rounded-lg bg-blue-100/50 dark:bg-blue-900/50 border-2 border-blue-500/30 dark:border-blue-400/30">
                         <div className="flex items-center">
