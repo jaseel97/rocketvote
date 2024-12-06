@@ -195,13 +195,8 @@ const CreatePoll = () => {
         return res.json();
       })
       .then((responseData) => {
-        if (responseData.redirect_url) {
-          navigate(`/create/${responseData.poll_id}`, {
-            state: {
-              poll_id: responseData.poll_id,
-              redirect_url: responseData.redirect_url,
-            },
-          });
+        if (responseData.creation_id && responseData.poll_id) {
+          navigate(`/${responseData.creation_id}/manage/${responseData.poll_id}`);
         }
         setValidationError("");
       })

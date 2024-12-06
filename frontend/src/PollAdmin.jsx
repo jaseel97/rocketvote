@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useAccessibility } from './AccessibilityContext';
 import { useAuth } from './context/AuthContext';
@@ -15,8 +15,7 @@ import {
 
 const PollAdmin = () => {
     const { isAuthenticated, redirectToLogin } = useAuth();
-    const location = useLocation();
-    const { poll_id, redirect_url } = location.state || {};
+    const { creation_id, poll_id } = useParams();
     const [pollData, setPollData] = useState(null);
     const [isPending, setIsPending] = useState(true);
     const [error, setError] = useState(null);
@@ -35,13 +34,13 @@ const PollAdmin = () => {
     if (!isAuthenticated) return null;
 
     const fetchPollData = () => {
-        if (!redirect_url) {
-            setError("No redirect URL provided");
+        if (!creation_id || !poll_id) {
+            setError("Invalid poll URL");
             setIsPending(false);
             return;
         }
 
-        fetch(`${apiDomain}${redirect_url}`)
+        fetch(`${apiDomain}/create/${creation_id}`)
             .then(res => {
                 if (!res.ok) throw new Error("Failed to fetch poll data");
                 return res.json();
@@ -59,7 +58,7 @@ const PollAdmin = () => {
     };
 
     useEffect(() => {
-        if (!poll_id || !redirect_url) return;
+        if (!creation_id || !poll_id) return;
 
         fetchPollData();
 
@@ -71,7 +70,7 @@ const PollAdmin = () => {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.results_revealed) {
-                setRevealed(true);
+                setIsRevealed(true);
                 fetchPollData();
             }
             if (data.vote_cast) {
@@ -93,7 +92,7 @@ const PollAdmin = () => {
                 ws.close();
             }
         };
-    }, [poll_id, redirect_url]);
+    }, [creation_id, poll_id]);
 
     const handleCopy = async () => {
         try {
@@ -106,7 +105,7 @@ const PollAdmin = () => {
     };
 
     const handleReveal = () => {
-        fetch(`${apiDomain}${redirect_url}`, {
+        fetch(`${apiDomain}/create/${creation_id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ revealed: "1" })
@@ -119,7 +118,7 @@ const PollAdmin = () => {
             .catch((err) => console.error("Error revealing poll:", err));
     };
 
-    const getVotersForOption = (questionIndex, option) => {
+    const getVotersForOption = (questionIndex, option) => { 
         if (!pollData?.results?.[questionIndex]?.votes) return [];
         return Object.entries(pollData.results[questionIndex].votes)
             .filter(([_, votes]) => votes.includes(option))
