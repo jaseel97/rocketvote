@@ -67,6 +67,14 @@ const CreatePoll = () => {
     return true;
   };
 
+  const validateDescription = (description) => {
+    if (!description.trim()) {
+      setValidationError("Description/Question is required.");
+      return false;
+    }
+    return true;
+  };
+
   const validateAllQuestions = () => {
     for (const question of questions) {
       if (!validateOptions(question.options)) return false;
@@ -98,9 +106,15 @@ const CreatePoll = () => {
 
   const handleSaveTemplate = () => {
     if (!templateTitle.trim()) {
-      setValidationError("Template title is required.");
-      return;
-    }
+        setValidationError("Template title is required.");
+        return;
+      }
+    
+      for (const question of questions) {
+        if (!validateDescription(question.description)) {
+          return;
+        }
+      }
 
     if (!validateAllQuestions()) return;
 
@@ -154,7 +168,13 @@ const CreatePoll = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validateAllQuestions()) return;
+    for (const question of questions) {
+        if (!validateDescription(question.description)) {
+          return;
+        }
+      }
+    
+      if (!validateAllQuestions()) return;
 
     fetch(`${apiDomain}/create`, {
       method: "POST",
@@ -425,23 +445,37 @@ const CreatePoll = () => {
             </div>
 
             <div className="relative mb-[1.5em]"> 
-                <textarea
-                    required
-                    value={question.description}
-                    onChange={(e) => {
-                        const newQuestions = [...questions];
-                        newQuestions[questionIndex].description =
-                            e.target.value;
-                        setQuestions(newQuestions);
-                    }}
-                    placeholder=" "
-                    rows="3"
-                    className="peer input-base resize-none"
-                ></textarea>
-                <label className="textarea-label">
-                    Description/Question
-                </label>
-            </div>
+    <textarea
+        value={question.description}
+        onChange={(e) => {
+            const newQuestions = [...questions];
+            newQuestions[questionIndex].description = e.target.value;
+            setQuestions(newQuestions);
+            if (e.target.value.trim()) {
+                setValidationError("");
+            }
+        }}
+        onBlur={(e) => {
+            if (!e.target.value.trim()) {
+                setValidationError("Description/Question is required.");
+            }
+        }}
+        placeholder=" "
+        rows="3"
+        className={`peer input-base resize-none ${
+            !question.description.trim() && validationError 
+            ? 'border-red-500 dark:border-red-500' 
+            : ''
+        }`}
+    ></textarea>
+    <label className={`textarea-label ${
+        !question.description.trim() && validationError 
+        ? 'text-red-500 dark:text-red-500' 
+        : ''
+    }`}>
+        Description/Question
+    </label>
+</div>
 
                   {question.options.map((option, optionIndex) => {
     const isAtMaxOptions = question.options.length >= 15;
@@ -536,9 +570,9 @@ const CreatePoll = () => {
                 label="Anonymous Poll"
               />
 
-<div className="mt-6 flex gap-4">
+<div className="mt-6 flex flex-col md:flex-row gap-4">
     <button type="submit" className="end-button end-button-green">
-        <span className="relative z-10 text-inherit-size">Create Poll</span>
+        <span className="relative z-10">Create Poll</span>
     </button>
 
     <button
@@ -546,7 +580,7 @@ const CreatePoll = () => {
         onClick={handleReset}
         className="end-button end-button-red"
     >
-        <span className="relative z-10 text-inherit-size">Reset</span>
+        <span className="relative z-10">Reset</span>
     </button>
 
     <button
@@ -554,7 +588,7 @@ const CreatePoll = () => {
         onClick={handleSaveTemplate}
         className="end-button end-button-sky"
     >
-        <span className="relative z-10 text-inherit-size">Save Template</span>
+        <span className="relative z-10">Save Template</span>
     </button>
 </div>
             </form>
